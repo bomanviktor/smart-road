@@ -13,4 +13,8 @@ impl Lane {
             cars: Vec::new(),
         }
     }
+
+    pub fn add_car_to_lane(&mut self, car: Car) {
+        self.cars.push(car)
+    }
 }

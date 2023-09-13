@@ -1,13 +1,9 @@
 use crate::traffic::car::Car;
+use crate::traffic::intersection::Intersection;
 use crate::traffic::lane::Lane;
 use crate::traffic::statistics::*;
 
-pub enum Turning {
-    Straight,
-    Left,
-    Right
-}
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Direction {
     North,
     East,
@@ -18,12 +14,9 @@ pub enum Direction {
 
 pub struct State {
     lanes: [Lane; 4],
-    intersection: [[Option<Car>; 6];6], // Matrix displaying all available spots in intersection
+    intersection: Intersection,
     stats: Statistics
 }
-
-
-
 
 impl State {
     pub fn new() -> State {
@@ -33,7 +26,7 @@ impl State {
                 Lane::new(Direction::East),
                 Lane::new(Direction::South),
                 Lane::new(Direction::West)],
-            intersection: [[None;6];6],
+            intersection: Intersection::new(),
             stats: Statistics::new()
         }
     }

@@ -1,32 +1,52 @@
 use crate::traffic::Direction;
-use crate::traffic::state::Turning;
+use crate::traffic::car::Turning;
 
-pub struct Point {
+/*
+pub enum SectorStatus {
+    Taken,
+    Free
+}
+*/
+
+#[derive(Clone, Debug)]
+pub struct Sector {
     x: usize,
     y: usize,
+//    status: SectorStatus
 }
 
-impl Point {
-    pub fn new(x: usize, y: usize) -> Point {
-        Point {
-            x, y
+impl Sector {
+    pub fn new(x: usize, y: usize) -> Sector {
+        Sector {
+            x,
+            y,
+            //status: SectorStatus::Free
         }
     }
+    pub fn get_x(&self) -> usize {
+        self.x
+    }
+
+    pub fn get_y(&self) -> usize {
+        self.y
+    }
 }
+#[derive(Clone)]
 pub struct Path {
-    current: usize,
-    points: Vec<Point>
+    pub current: Sector,
+    pub sectors: Vec<Sector>
 }
 
 impl Path {
-    pub fn new(direction: Direction, turning: Turning) -> Path {
+    pub fn new(direction: &Direction, turning: &Turning) -> Path {
+        let sectors = match turning {
+            Turning::Left => left_turn(direction),
+            Turning::Straight => go_straight(direction),
+            Turning::Right => right_turn(direction),
+        };
         Path {
-            current: 0,
-            points: match turning {
-                Turning::Left => left_turn(direction),
-                Turning::Straight => go_straight(direction),
-                Turning::Right => right_turn(direction),
-            }
+            current: sectors[0].clone(),
+            sectors
         }
     }
 }
@@ -64,46 +84,58 @@ impl Path {
  *
  */
 
-fn left_turn(direction: Direction) -> Vec<Point> {
+fn left_turn(direction: &Direction) -> Vec<Sector> {
     match direction {
         Direction::North => vec![
-            Point::new(2, 0), // Entry
-            Point::new(2, 3), // Turning-point
-            Point::new(5, 3), // Exit
+            Sector::new(5, 3), // Exit
+            Sector::new(2, 3), // Turning-point
+            Sector::new(2, 0), // Entry
         ],
         Direction::East => vec![
-            Point::new(5, 2),
-            Point::new(2, 2),
-            Point::new(2, 5),
+            Sector::new(5, 2), // Entry
+            Sector::new(2, 2), // Turning-point
+            Sector::new(2, 5), // Exit
         ],
         Direction::South => vec![
-            Point::new(3, 6),
-            Point::new(3, 2),
-            Point::new(0, 2),
+            Sector::new(3, 6), // Entry
+            Sector::new(3, 2), // Turning-point
+            Sector::new(0, 2), // Exit
         ],
         Direction::West => vec![
-            Point::new(0, 3),
-            Point::new(3, 3),
-            Point::new(3, 0),
+            Sector::new(0, 3), // Entry
+            Sector::new(3, 3), // Turning-point
+            Sector::new(3, 0), // Exit
         ]
     }
 }
 
-fn go_straight(direction: Direction) -> Vec<Point> {
+fn go_straight(direction: &Direction) -> Vec<Sector> {
     match direction {
-        Direction::North => vec![Point::new(1, 0), Point::new(1, 5)],
-        Direction::East => vec![Point::new(5, 1), Point::new(0, 1)],
-        Direction::South => vec![Point::new(4, 5), Point::new(4, 0)],
-        Direction::West => vec![Point::new(0, 4), Point::new(5, 4)]
+        Direction::North => vec![
+            Sector::new(1, 5), // Exit
+            Sector::new(1, 0), // Entry
+        ],
+        Direction::East => vec![
+            Sector::new(0, 1), // Exit
+            Sector::new(5, 1), // Entry
+        ],
+        Direction::South => vec![
+            Sector::new(4, 0), // Exit
+            Sector::new(4, 5), // Entry
+        ],
+        Direction::West => vec![
+            Sector::new(5, 4), // Exit
+            Sector::new(0, 4), // Entry
+        ]
     }
 }
 
-fn right_turn(direction: Direction) -> Vec<Point> {
+fn right_turn(direction: &Direction) -> Vec<Sector> {
     match direction {
-        Direction::North => vec![Point::new(0, 0)],
-        Direction::East => vec![Point::new(5, 0)],
-        Direction::South => vec![Point::new(5, 5)],
-        Direction::West => vec![Point::new(0, 5)]
+        Direction::North => vec![Sector::new(0, 0)],
+        Direction::East => vec![Sector::new(5, 0)],
+        Direction::South => vec![Sector::new(5, 5)],
+        Direction::West => vec![Sector::new(0, 5)]
     }
 }
 
