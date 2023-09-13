@@ -1,14 +1,15 @@
+#![allow(dead_code)] // TODO: remove
 mod config;
 mod controls;
-mod traffic;
 mod render;
+mod traffic;
 
 use macroquad::prelude::*;
 
-use config::window_conf;
 use crate::controls::handle_input;
 use crate::render::render_roads;
 use crate::traffic::State;
+use config::window_conf;
 
 #[macroquad::main(window_conf)]
 async fn main() {

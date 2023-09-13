@@ -1,5 +1,5 @@
-use crate::traffic::Direction;
 use crate::traffic::car::Turning;
+use crate::traffic::Direction;
 
 /*
 pub enum SectorStatus {
@@ -12,7 +12,7 @@ pub enum SectorStatus {
 pub struct Sector {
     x: usize,
     y: usize,
-//    status: SectorStatus
+    //    status: SectorStatus
 }
 
 impl Sector {
@@ -34,7 +34,7 @@ impl Sector {
 #[derive(Clone)]
 pub struct Path {
     pub current: Sector,
-    pub sectors: Vec<Sector>
+    pub sectors: Vec<Sector>,
 }
 
 impl Path {
@@ -46,7 +46,7 @@ impl Path {
         };
         Path {
             current: sectors[0].clone(),
-            sectors
+            sectors,
         }
     }
 }
@@ -105,7 +105,7 @@ fn left_turn(direction: &Direction) -> Vec<Sector> {
             Sector::new(0, 3), // Entry
             Sector::new(3, 3), // Turning-point
             Sector::new(3, 0), // Exit
-        ]
+        ],
     }
 }
 
@@ -126,7 +126,7 @@ fn go_straight(direction: &Direction) -> Vec<Sector> {
         Direction::West => vec![
             Sector::new(5, 4), // Exit
             Sector::new(0, 4), // Entry
-        ]
+        ],
     }
 }
 
@@ -135,7 +135,6 @@ fn right_turn(direction: &Direction) -> Vec<Sector> {
         Direction::North => vec![Sector::new(0, 0)],
         Direction::East => vec![Sector::new(5, 0)],
         Direction::South => vec![Sector::new(5, 5)],
-        Direction::West => vec![Sector::new(0, 5)]
+        Direction::West => vec![Sector::new(0, 5)],
     }
 }
-

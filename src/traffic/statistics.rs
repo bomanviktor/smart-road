@@ -4,7 +4,7 @@ pub struct Statistics {
     min_velocity: f64,
     max_time: f64,
     min_time: f64,
-    close_calls: u32
+    close_calls: u32,
 }
 
 impl Statistics {
@@ -15,7 +15,7 @@ impl Statistics {
             min_velocity: 0.0,
             max_time: 0.0,
             min_time: 0.0,
-            close_calls: 0
+            close_calls: 0,
         }
     }
 

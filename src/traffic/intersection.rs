@@ -1,13 +1,13 @@
 use crate::traffic::car::Car;
 use crate::traffic::path::Sector;
 
-type Grid = [[Option<Car>; 6];6];
+type Grid = [[Option<Car>; 6]; 6];
 
 #[derive(Clone)]
 pub struct Intersection {
     grid: Grid, // None if no car, Some if there is a car
     occupied_sectors: Vec<Sector>,
-    empty_sectors: Vec<Sector>
+    empty_sectors: Vec<Sector>,
 }
 
 impl Intersection {
@@ -15,7 +15,7 @@ impl Intersection {
         Intersection {
             grid: new_grid(),
             occupied_sectors: Vec::new(),
-            empty_sectors: Vec::new()
+            empty_sectors: Vec::new(),
         }
     }
 

@@ -1,21 +1,21 @@
-use macroquad::rand::{gen_range, rand};
-use crate::config::{ROAD_LINE_WIDTH, ROAD_WIDTH, WINDOW_SIZE};
-use crate::traffic::Direction;
+use crate::config::ROAD_WIDTH;
 use crate::traffic::path::{Path, Sector};
+use crate::traffic::Direction;
+use macroquad::rand::gen_range;
 
 #[derive(Clone)]
 pub enum Moving {
     Up,
     Right,
     Down,
-    Left
+    Left,
 }
 
 #[derive(Clone)]
 pub enum Turning {
     Left,
     Straight,
-    Right
+    Right,
 }
 
 #[derive(Clone)]
@@ -26,7 +26,7 @@ pub struct Car {
     direction: Direction,
     turning: Turning,
     moving: Moving,
-    pub path: Path
+    pub path: Path,
 }
 #[allow(dead_code)]
 impl Car {
@@ -46,25 +46,17 @@ impl Car {
             moving: moving(&direction),
             direction,
             turning,
-            path
+            path,
         }
     }
 
     // Add functionality here
     pub fn move_car(&mut self) {
         match self.direction {
-            Direction::North => {
-
-            },
-            Direction::East => {
-
-            },
-            Direction::South => {
-
-            },
-            Direction::West => {
-
-            }
+            Direction::North => {}
+            Direction::East => {}
+            Direction::South => {}
+            Direction::West => {}
         }
     }
 
@@ -82,11 +74,13 @@ fn moving(direction: &Direction) -> Moving {
         Direction::North => Moving::Down,
         Direction::East => Moving::Left,
         Direction::South => Moving::Up,
-        Direction::West => Moving::Right
+        Direction::West => Moving::Right,
     }
 }
 
 fn get_entry_coords(p: &Sector) -> (f32, f32) {
-    (ROAD_WIDTH / 2.0 + (80.0 * p.get_x() as f32),
-     ROAD_WIDTH / 2.0 + (80.0 * p.get_y() as f32))
+    (
+        ROAD_WIDTH / 2.0 + (80.0 * p.get_x() as f32),
+        ROAD_WIDTH / 2.0 + (80.0 * p.get_y() as f32),
+    )
 }

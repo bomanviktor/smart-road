@@ -8,7 +8,7 @@ pub fn handle_input(_state: &mut State) {
 
     if is_key_pressed(KeyCode::Up) {
         println!("Car from: {:?}", Direction::South);
-       //traffic_state.add_car(Direction::South);
+        //traffic_state.add_car(Direction::South);
     }
 
     if is_key_pressed(KeyCode::Down) {
