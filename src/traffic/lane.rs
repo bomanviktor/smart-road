@@ -1,0 +1,16 @@
+use crate::traffic::car::Car;
+use crate::traffic::state::Direction;
+
+pub struct Lane {
+    direction: Direction,
+    cars: Vec<Car>,
+}
+
+impl Lane {
+    pub fn new(direction: Direction) -> Lane {
+        Lane {
+            direction,
+            cars: Vec::new(),
+        }
+    }
+}
