@@ -1,5 +1,5 @@
 mod car;
-mod intersection;
+mod grid;
 mod lane;
 mod path;
 mod state;

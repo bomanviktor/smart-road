@@ -1,6 +1,5 @@
 use crate::config::{
-    ROAD_COLOR, ROAD_LINE_COLOR, ROAD_LINE_LENGTH, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH,
-    WINDOW_SIZE,
+    ROAD_COLOR, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE,
 };
 
 use macroquad::prelude::*;
@@ -33,8 +32,8 @@ pub fn render_roads() {
             match i {
                 3 | 9 => RED,
                 6 => BLUE,
-                _ => ROAD_LINE_COLOR
-            }
+                _ => ROAD_LINE_COLOR,
+            },
         );
     }
 
@@ -48,8 +47,8 @@ pub fn render_roads() {
             match i {
                 3 | 9 => RED,
                 6 => BLUE,
-                _ => ROAD_LINE_COLOR
-            }
+                _ => ROAD_LINE_COLOR,
+            },
         );
     }
 
@@ -82,8 +81,6 @@ pub fn render_roads() {
         (WINDOW_SIZE / 4) as f32,
         BLACK,
     );
-
-
 
     /*
     THIS IS FOR PRODUCTION USE

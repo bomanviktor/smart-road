@@ -31,110 +31,174 @@ impl Sector {
         self.y
     }
 }
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Path {
-    pub current: Sector,
+    pub current: usize,
     pub sectors: Vec<Sector>,
 }
 
 impl Path {
     pub fn new(direction: &Direction, turning: &Turning) -> Path {
-        let sectors = match turning {
-            Turning::Left => left_turn(direction),
-            Turning::Straight => go_straight(direction),
-            Turning::Right => right_turn(direction),
-        };
         Path {
-            current: sectors[0].clone(),
-            sectors,
+            current: 0,
+            sectors: match turning {
+                Turning::Left => left_turn(direction),
+                Turning::Straight => go_straight(direction),
+                Turning::Right => right_turn(direction),
+            },
         }
     }
 }
 
 /*
- *       x x x x x x
- *       0 1 2 3 4 5
- *  y 0 |_|_|_|_|_|_|
- *  y 1 |_|_|_|_|_|_|
- *  y 2 |_|_|_|_|_|_|
- *  y 3 |_|_|_|_|_|_|
- *  y 4 |_|_|_|_|_|_|
- *  y 5 |_|_|_|_|_|_|
- *
+ *                  x
+ *       0 1 2 3 4 5 6 7 8 9 10 11
+ *    0       |_|_|_|_|_|_|        0
+ *    1       |_|_|_|_|_|_|        1
+ *    2       |_|_|_|_|_|_|        2
+ *    3 |_|_|_|_|_|_|_|_|_|_|_|_|  3
+ *    4 |_|_|_|_|_|_|_|_|_|_|_|_|  4
+ *  y 5 |_|_|_|_|_|_|_|_|_|_|_|_|  5 y
+ *    6 |_|_|_|_|_|_|_|_|_|_|_|_|  6
+ *    7 |_|_|_|_|_|_|_|_|_|_|_|_|  7
+ *    8 |_|_|_|_|_|_|_|_|_|_|_|_|  8
+ *    9       |_|_|_|_|_|_|        9
+ *    10      |_|_|_|_|_|_|        10
+ *    11      |_|_|_|_|_|_|        11
+ *       0 1 2 3 4 5 6 7 8 9 10 11
+ *                  x
  *
  * PATHS FOR NORTH:
- * RIGHT: (x0, y0) -> (x0,y0)
- * STRAIGHT: (x1, y0) -> (x1, y5)
- * LEFT: (x2, y0) -> (x2, y3) -> (x5, y3)
+ * LEFT: (x5, y0) -> (x5, y6) -> (x11, y6)
+ * STRAIGHT: (x4, y0) -> (x4, y11)
+ * RIGHT: (x3, y0) -> (x3, y3) -> (x0, y3)
  *
  * PATHS FOR EAST:
- * RIGHT: (x5, y0) -> (x5, y0)
- * STRAIGHT: (x5, y1) -> (x0, y1)
- * LEFT: (x5, y2) -> (x2, y2) -> (x2, y5)
+ * LEFT: (x11, y5) -> (x5, y5) -> (x5, y11)
+ * STRAIGHT: (x11, y4) -> (x0, y4)
+ * RIGHT: (x11, y3) -> (x8, y3) -> (x8, y0)
  *
  * PATHS FOR SOUTH:
- * RIGHT: (x5, y5) -> (x5, y5)
- * STRAIGHT: (x4, y5) -> (x4, y0)
- * LEFT: (x3, y5) -> (x3, y2) -> (x0, y2)
+ * LEFT: (x6, y11) -> (x6, y5) -> (x0, y5)
+ * STRAIGHT: (x7, y11) -> (x7, y0)
+ * RIGHT: (x8, y11) -> (x8, y8) -> (x11, y8)
  *
  * PATHS FOR WEST:
- * RIGHT: (x0, y5) -> (x0, y5)
- * STRAIGHT: (x0, y4) -> (x5, y4)
- * LEFT: (x0, y3) -> (x3, y3) -> (x3, y0)
+ * LEFT: (x0, y6) -> (x6, y6) -> (x6, y0)
+ * STRAIGHT: (x0, y7) -> (x11, y7)
+ * RIGHT: (x0, y8) -> (x3, y8) -> (x3, y11)
  *
  */
 
 fn left_turn(direction: &Direction) -> Vec<Sector> {
     match direction {
-        Direction::North => vec![
-            Sector::new(5, 3), // Exit
-            Sector::new(2, 3), // Turning-point
-            Sector::new(2, 0), // Entry
-        ],
-        Direction::East => vec![
-            Sector::new(5, 2), // Entry
-            Sector::new(2, 2), // Turning-point
-            Sector::new(2, 5), // Exit
-        ],
-        Direction::South => vec![
-            Sector::new(3, 6), // Entry
-            Sector::new(3, 2), // Turning-point
-            Sector::new(0, 2), // Exit
-        ],
-        Direction::West => vec![
-            Sector::new(0, 3), // Entry
-            Sector::new(3, 3), // Turning-point
-            Sector::new(3, 0), // Exit
-        ],
+        Direction::North => get_path(vec![
+            Sector::new(5, 0),  // Entry
+            Sector::new(5, 6),  // Turning-point
+            Sector::new(11, 6), // Exit
+        ]),
+        Direction::East => get_path(vec![
+            Sector::new(11, 5), // Entry
+            Sector::new(5, 5),  // Turning-point
+            Sector::new(5, 11), // Exit
+        ]),
+        Direction::South => get_path(vec![
+            Sector::new(6, 11), // Entry
+            Sector::new(6, 5),  // Turning-point
+            Sector::new(0, 5),  // Exit
+        ]),
+        Direction::West => get_path(vec![
+            Sector::new(0, 6), // Entry
+            Sector::new(6, 6), // Turning-point
+            Sector::new(6, 0), // Exit
+        ]),
     }
 }
 
 fn go_straight(direction: &Direction) -> Vec<Sector> {
     match direction {
-        Direction::North => vec![
-            Sector::new(1, 5), // Exit
-            Sector::new(1, 0), // Entry
-        ],
-        Direction::East => vec![
-            Sector::new(0, 1), // Exit
-            Sector::new(5, 1), // Entry
-        ],
-        Direction::South => vec![
-            Sector::new(4, 0), // Exit
-            Sector::new(4, 5), // Entry
-        ],
-        Direction::West => vec![
-            Sector::new(5, 4), // Exit
-            Sector::new(0, 4), // Entry
-        ],
+        Direction::North => get_path(vec![
+            Sector::new(4, 0),  // Entry
+            Sector::new(4, 5),  // Mid-point
+            Sector::new(4, 11), // Exit
+        ]),
+        Direction::East => get_path(vec![
+            Sector::new(11, 4), // Entry
+            Sector::new(5, 4),  // Mid-point
+            Sector::new(0, 4),  // Exit
+        ]),
+        Direction::South => get_path(vec![
+            Sector::new(7, 11), // Entry
+            Sector::new(7, 5),  // Mid-point
+            Sector::new(7, 0),  // Exit
+        ]),
+        Direction::West => get_path(vec![
+            Sector::new(0, 7),  // Entry
+            Sector::new(5, 7),  // Mid-point
+            Sector::new(11, 7), // Exit
+        ]),
     }
 }
 
 fn right_turn(direction: &Direction) -> Vec<Sector> {
     match direction {
-        Direction::North => vec![Sector::new(0, 0)],
-        Direction::East => vec![Sector::new(5, 0)],
-        Direction::South => vec![Sector::new(5, 5)],
-        Direction::West => vec![Sector::new(0, 5)],
+        Direction::North => get_path(vec![
+            Sector::new(3, 0), // Entry
+            Sector::new(3, 3), // Turning point
+            Sector::new(0, 3), // Exit
+        ]),
+        Direction::East => get_path(vec![
+            Sector::new(11, 3), // Entry
+            Sector::new(8, 3),  // Turning point
+            Sector::new(8, 0),  // Exit
+        ]),
+        Direction::South => get_path(vec![
+            Sector::new(8, 11), // Entry
+            Sector::new(8, 8),  // Turning point
+            Sector::new(11, 8), // Exit
+        ]),
+        Direction::West => get_path(vec![
+            Sector::new(0, 8),  // Entry
+            Sector::new(3, 8),  // Turning point
+            Sector::new(3, 11), // Exit
+        ]),
     }
+}
+
+// Helper function to get all sectors in the path
+fn get_path(sectors: Vec<Sector>) -> Vec<Sector> {
+    let mut path = vec![sectors[0].clone()];
+    let mut x: usize = sectors[0].x;
+    let mut y: usize = sectors[0].y;
+    while x != sectors[1].x || y != sectors[1].y {
+        if x < sectors[1].x {
+            x += 1;
+        }
+        if x > sectors[1].x {
+            x -= 1;
+        }
+        if y < sectors[1].y {
+            y += 1;
+        }
+        if y > sectors[1].y {
+            y -= 1;
+        }
+        path.push(Sector::new(x, y));
+    }
+    while x != sectors[2].x || y != sectors[2].y {
+        if x < sectors[2].x {
+            x += 1;
+        }
+        if x > sectors[2].x {
+            x -= 1;
+        }
+        if y < sectors[2].y {
+            y += 1;
+        }
+        if y > sectors[2].y {
+            y -= 1;
+        }
+        path.push(Sector::new(x, y));
+    }
+    path
 }

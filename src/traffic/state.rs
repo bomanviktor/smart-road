@@ -1,6 +1,8 @@
-use crate::traffic::intersection::Intersection;
+use crate::traffic::car::Car;
+use crate::traffic::grid::Grid;
 use crate::traffic::lane::Lane;
 use crate::traffic::statistics::*;
+use macroquad::rand::gen_range;
 
 #[derive(Debug, Clone)]
 pub enum Direction {
@@ -12,7 +14,7 @@ pub enum Direction {
 
 pub struct State {
     lanes: [Lane; 4],
-    intersection: Intersection,
+    grid: Grid,
     stats: Statistics,
 }
 
@@ -25,15 +27,33 @@ impl State {
                 Lane::new(Direction::South),
                 Lane::new(Direction::West),
             ],
-            intersection: Intersection::new(),
+            grid: Grid::new(),
             stats: Statistics::new(),
         }
     }
 
     pub fn update(&mut self) {
-        self.intersection.get_grid();
-        self.intersection.get_empty();
-        self.intersection.get_occupied();
-        self.intersection.update_grid();
+        self.grid.get_intersection();
+        self.grid.update_intersection();
+        self.grid.get_empty();
+        self.grid.get_occupied();
+    }
+
+    pub fn add_car(&mut self, direction: Direction) {
+        match direction {
+            Direction::North => self.lanes[0].add_car(Car::new(Direction::North)),
+            Direction::East => self.lanes[1].add_car(Car::new(Direction::East)),
+            Direction::South => self.lanes[2].add_car(Car::new(Direction::South)),
+            Direction::West => self.lanes[3].add_car(Car::new(Direction::West)),
+        }
+    }
+
+    pub fn add_car_random(&mut self) {
+        match gen_range(0, 3) {
+            0 => self.add_car(Direction::North),
+            1 => self.add_car(Direction::East),
+            2 => self.add_car(Direction::South),
+            _ => self.add_car(Direction::West),
+        }
     }
 }

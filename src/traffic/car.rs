@@ -1,15 +1,7 @@
-use crate::config::ROAD_WIDTH;
+use crate::config::SECTOR_WIDTH;
 use crate::traffic::path::{Path, Sector};
 use crate::traffic::Direction;
 use macroquad::rand::gen_range;
-
-#[derive(Clone)]
-pub enum Moving {
-    Up,
-    Right,
-    Down,
-    Left,
-}
 
 #[derive(Clone)]
 pub enum Turning {
@@ -18,17 +10,15 @@ pub enum Turning {
     Right,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Car {
     x: f32,
     y: f32,
     vel: f32,
     direction: Direction,
-    turning: Turning,
-    moving: Moving,
     pub path: Path,
 }
-#[allow(dead_code)]
+
 impl Car {
     pub fn new(direction: Direction) -> Car {
         let turning = match gen_range(0, 2) {
@@ -39,15 +29,15 @@ impl Car {
 
         let path = Path::new(&direction, &turning);
         let (x, y) = get_entry_coords(&path.sectors[0]);
-        Car {
+        let car = Car {
             x,
             y,
             vel: 1.0,
-            moving: moving(&direction),
             direction,
-            turning,
             path,
-        }
+        };
+        println!("{:?}", car.path);
+        car
     }
 
     // Add functionality here
@@ -69,18 +59,9 @@ impl Car {
     }
 }
 
-fn moving(direction: &Direction) -> Moving {
-    match direction {
-        Direction::North => Moving::Down,
-        Direction::East => Moving::Left,
-        Direction::South => Moving::Up,
-        Direction::West => Moving::Right,
-    }
-}
-
 fn get_entry_coords(p: &Sector) -> (f32, f32) {
     (
-        ROAD_WIDTH / 2.0 + (80.0 * p.get_x() as f32),
-        ROAD_WIDTH / 2.0 + (80.0 * p.get_y() as f32),
+        SECTOR_WIDTH * p.get_x() as f32,
+        SECTOR_WIDTH * p.get_y() as f32,
     )
 }
