@@ -1,3 +1,4 @@
+#[derive(PartialEq, Debug)]
 pub struct Statistics {
     max_vehicles: u32,
     max_velocity: f64,
@@ -21,22 +22,41 @@ impl Statistics {
 
     // Setters
     pub fn set_max_vehicles(&mut self, max_vehicles: u32) {
-        self.max_vehicles = max_vehicles;
+        if max_vehicles > self.max_vehicles {
+            self.max_vehicles = max_vehicles;
+        }
     }
     pub fn set_max_velocity(&mut self, max_velocity: f64) {
-        self.max_velocity = max_velocity;
+        if max_velocity > self.max_velocity {
+            self.max_velocity = max_velocity;
+        }
     }
     pub fn set_min_velocity(&mut self, min_velocity: f64) {
-        self.min_velocity = min_velocity;
+        if self.min_velocity == 0.0 {
+            self.min_velocity = min_velocity;
+        }
+
+        if min_velocity < self.min_velocity {
+            self.min_velocity = min_velocity;
+        }
     }
     pub fn set_max_time(&mut self, max_time: f64) {
-        self.max_time = max_time;
+        if max_time > self.max_time {
+            self.max_time = max_time;
+        }
     }
     pub fn set_min_time(&mut self, min_time: f64) {
-        self.min_time = min_time;
+        if self.min_time == 0.0 {
+            self.min_time = min_time;
+        }
+        if min_time < self.min_time {
+            self.min_time = min_time;
+        }
     }
     pub fn set_close_calls(&mut self, close_calls: u32) {
-        self.close_calls = close_calls;
+        if close_calls > self.close_calls {
+            self.close_calls = close_calls;
+        }
     }
 
     // Getters
@@ -57,5 +77,11 @@ impl Statistics {
     }
     pub fn close_calls(&self) -> u32 {
         self.close_calls
+    }
+}
+
+impl Default for Statistics {
+    fn default() -> Self {
+        Self::new()
     }
 }

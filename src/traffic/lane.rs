@@ -1,6 +1,7 @@
 use crate::traffic::car::Car;
 use crate::traffic::state::Direction;
 
+#[derive(PartialEq)]
 pub struct Lane {
     direction: Direction,
     cars: Vec<Car>,

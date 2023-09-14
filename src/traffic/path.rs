@@ -8,7 +8,7 @@ pub enum SectorStatus {
 }
 */
 
-#[derive(Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Sector {
     x: usize,
     y: usize,
@@ -31,7 +31,7 @@ impl Sector {
         self.y
     }
 }
-#[derive(Clone, Debug)]
+#[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Path {
     pub current: usize,
     pub sectors: Vec<Sector>,

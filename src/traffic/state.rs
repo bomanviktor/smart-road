@@ -4,7 +4,7 @@ use crate::traffic::lane::Lane;
 use crate::traffic::statistics::*;
 use macroquad::rand::gen_range;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
     North,
     East,
@@ -12,6 +12,7 @@ pub enum Direction {
     West,
 }
 
+#[derive(PartialEq)]
 pub struct State {
     pub lanes: [Lane; 4],
     pub grid: Grid,
@@ -55,5 +56,11 @@ impl State {
             2 => self.add_car(Direction::South),
             _ => self.add_car(Direction::West),
         }
+    }
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::new()
     }
 }

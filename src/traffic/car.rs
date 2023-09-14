@@ -3,14 +3,14 @@ use crate::traffic::path::{Path, Sector};
 use crate::traffic::Direction;
 use macroquad::rand::gen_range;
 
-#[derive(Clone)]
+#[derive(Eq, PartialEq, Clone)]
 pub enum Turning {
     Left,
     Straight,
     Right,
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Car {
     x: f32,
     y: f32,
