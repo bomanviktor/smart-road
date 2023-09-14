@@ -1,15 +1,11 @@
 #![allow(dead_code)] // TODO: remove
-mod config;
-mod controls;
-mod render;
-mod traffic;
 
 use macroquad::prelude::*;
 
-use crate::controls::handle_input;
-use crate::render::render_roads;
-use crate::traffic::State;
-use config::window_conf;
+use smart_road::config::window_conf;
+use smart_road::controls::handle_input;
+use smart_road::render::render_roads;
+use smart_road::traffic::*;
 
 #[macroquad::main(window_conf)]
 async fn main() {

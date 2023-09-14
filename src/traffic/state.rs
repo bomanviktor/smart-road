@@ -13,9 +13,9 @@ pub enum Direction {
 }
 
 pub struct State {
-    lanes: [Lane; 4],
-    grid: Grid,
-    stats: Statistics,
+    pub lanes: [Lane; 4],
+    pub grid: Grid,
+    pub stats: Statistics,
 }
 
 impl State {
