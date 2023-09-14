@@ -1,13 +1,11 @@
 mod common;
 
-mod test_main {
-    use crate::*;
-}
+mod test_config {}
 mod test_state {
     use smart_road::traffic::state::*;
     #[test]
     fn test_constructor() {
-        let state = State::new();
+        let state = State::default();
 
         // Statistics tests.
         assert_eq!(state.stats.min_time(), 0.0);
@@ -16,8 +14,52 @@ mod test_state {
         assert_eq!(state.stats.close_calls(), 0);
         assert_eq!(state.stats.min_velocity(), 0.0);
         assert_eq!(state.stats.max_vehicles(), 0);
+    }
 
-        // Other tests here
+    #[test]
+    fn test_add_car() {
+        let mut state = State::default();
+        // Add cars
+        for _ in 0..10 {
+            state.add_car(Direction::North);
+            state.add_car(Direction::East);
+            state.add_car(Direction::South);
+            state.add_car(Direction::West);
+        }
+
+        for i in 0..=3 {
+            assert_eq!(state.lanes[i].cars.len(), 10);
+        }
+
+        // Check if len of path is longer than 0
+        // TODO: improve this test
+        for i in 0..=3 {
+            for j in 0..10 {
+                assert!(state.lanes[i].cars[j].path.sectors.len() > 1);
+                assert!(state.lanes[i].cars[j].path.sectors.len() < 14);
+            }
+        }
+    }
+
+    #[test]
+    fn test_add_random() {
+        let mut state = State::default();
+        // Add cars
+        for _ in 0..10 {
+            state.add_car_random();
+        }
+        let mut cars = Vec::new();
+
+        for lane in state.lanes {
+            cars.push(lane.cars);
+        }
+
+        // Check if len of path is longer than 0
+        // TODO: improve this test
+        for car in cars.iter().flatten() {
+            assert!(car.path.sectors.len() > 1);
+            assert!(car.path.sectors.len() < 14);
+        }
     }
 }
 

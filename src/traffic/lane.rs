@@ -4,7 +4,7 @@ use crate::traffic::state::Direction;
 #[derive(PartialEq)]
 pub struct Lane {
     direction: Direction,
-    cars: Vec<Car>,
+    pub cars: Vec<Car>,
 }
 
 impl Lane {

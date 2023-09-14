@@ -28,8 +28,8 @@ impl State {
                 Lane::new(Direction::South),
                 Lane::new(Direction::West),
             ],
-            grid: Grid::new(),
-            stats: Statistics::new(),
+            grid: Grid::default(),
+            stats: Statistics::default(),
         }
     }
 
