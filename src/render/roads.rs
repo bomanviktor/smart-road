@@ -30,7 +30,11 @@ pub fn render_roads() {
             0.0, //25.0 + i as f32 * 100.0,
             ROAD_LINE_WIDTH,
             WINDOW_SIZE as f32,
-            ROAD_LINE_COLOR,
+            match i {
+                3 | 9 => RED,
+                6 => BLUE,
+                _ => ROAD_LINE_COLOR
+            }
         );
     }
 
@@ -41,7 +45,11 @@ pub fn render_roads() {
             i as f32 * SECTOR_WIDTH,
             WINDOW_SIZE as f32,
             ROAD_LINE_WIDTH,
-            ROAD_LINE_COLOR,
+            match i {
+                3 | 9 => RED,
+                6 => BLUE,
+                _ => ROAD_LINE_COLOR
+            }
         );
     }
 
