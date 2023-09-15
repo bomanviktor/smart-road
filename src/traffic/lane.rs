@@ -1,9 +1,10 @@
 use crate::traffic::car::Car;
 use crate::traffic::state::Direction;
 
+#[derive(PartialEq)]
 pub struct Lane {
     direction: Direction,
-    cars: Vec<Car>,
+    pub cars: Vec<Car>,
 }
 
 impl Lane {
@@ -14,7 +15,7 @@ impl Lane {
         }
     }
 
-    pub fn add_car_to_lane(&mut self, car: Car) {
+    pub fn add_car(&mut self, car: Car) {
         self.cars.push(car)
     }
 }

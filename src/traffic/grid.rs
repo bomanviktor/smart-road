@@ -1,28 +1,28 @@
 use crate::traffic::car::Car;
 use crate::traffic::path::Sector;
 
-type Grid = [[Option<Car>; 6]; 6];
+type Intersection = [[Option<Car>; 6]; 6];
 
-#[derive(Clone)]
-pub struct Intersection {
-    grid: Grid, // None if no car, Some if there is a car
+#[derive(Clone, PartialEq)]
+pub struct Grid {
+    intersection: Intersection, // None if no car, Some if there is a car
     occupied_sectors: Vec<Sector>,
     empty_sectors: Vec<Sector>,
 }
 
-impl Intersection {
-    pub fn new() -> Intersection {
-        Intersection {
-            grid: new_grid(),
+impl Grid {
+    pub fn new() -> Grid {
+        Grid {
+            intersection: new_intersection(),
             occupied_sectors: Vec::new(),
             empty_sectors: Vec::new(),
         }
     }
 
-    pub fn update_grid(&mut self) {
+    pub fn update_intersection(&mut self) {
         self.occupied_sectors.clear();
         self.empty_sectors.clear();
-        for (y, cars) in self.grid.iter().enumerate() {
+        for (y, cars) in self.intersection.iter().enumerate() {
             for (x, car) in cars.iter().enumerate() {
                 if car.is_none() {
                     self.empty_sectors.push(Sector::new(x, y));
@@ -33,14 +33,14 @@ impl Intersection {
         }
     }
 
-    pub fn insert_car_to_grid(&mut self, car: Car) {
+    pub fn insert_car_to_intersection(&mut self, car: Car) {
         let x = car.path.sectors[0].get_x();
         let y = car.path.sectors[0].get_y();
-        self.grid[x][y] = Some(car);
+        self.intersection[x - 3][y - 3] = Some(car);
     }
 
-    pub fn get_grid(&self) -> &Grid {
-        &self.grid
+    pub fn get_intersection(&self) -> &Intersection {
+        &self.intersection
     }
     pub fn get_occupied(&self) -> &Vec<Sector> {
         &self.occupied_sectors
@@ -50,7 +50,7 @@ impl Intersection {
     }
 }
 
-fn new_grid() -> Grid {
+fn new_intersection() -> Intersection {
     [
         [None, None, None, None, None, None],
         [None, None, None, None, None, None],
@@ -59,4 +59,10 @@ fn new_grid() -> Grid {
         [None, None, None, None, None, None],
         [None, None, None, None, None, None],
     ]
+}
+
+impl Default for Grid {
+    fn default() -> Self {
+        Self::new()
+    }
 }
