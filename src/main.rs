@@ -11,10 +11,15 @@ use crate::render::render_roads;
 use crate::traffic::State;
 use config::window_conf;
 
+//use set_screen_size;
+
+
 #[macroquad::main(window_conf)]
 async fn main() {
+    pub const WINDOW_SIZE: i32 = 1000;
     let mut state = State::new();
     loop {
+        macroquad::window::request_new_screen_size(WINDOW_SIZE as f32, WINDOW_SIZE as f32);
         clear_background(BLACK);
         handle_input(&mut state);
 
