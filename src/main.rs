@@ -11,9 +11,6 @@ use crate::render::render_roads;
 use crate::traffic::State;
 use config::window_conf;
 
-//use set_screen_size;
-
-
 #[macroquad::main(window_conf)]
 async fn main() {
     pub const WINDOW_SIZE: i32 = 1000;
