@@ -21,7 +21,7 @@ pub struct Car {
 
 impl Car {
     pub fn new(direction: Direction) -> Car {
-        let turning = match gen_range(0, 2) {
+        let turning = match gen_range(0, 3) {
             0 => Turning::Left,
             1 => Turning::Straight,
             _ => Turning::Right,
