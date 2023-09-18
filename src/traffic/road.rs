@@ -1,5 +1,5 @@
 use crate::traffic::car::Car;
-use crate::traffic::Turning;
+use crate::traffic::{Statistics, Turning};
 
 type Lanes = [[Option<Car>; 3]; 3];
 #[derive(PartialEq)]
@@ -53,6 +53,16 @@ impl Road {
             }
         }
         available_lanes
+    }
+
+    // Add time for all cars that reached their destination and then remove from vector.
+    pub fn cleanup_cars(&mut self, stats: &mut Statistics) {
+        self.cars
+            .iter()
+            .filter(|car| car.is_done())
+            .for_each(|car| car.add_time(stats));
+
+        self.cars.retain(|car| !car.is_done());
     }
 }
 

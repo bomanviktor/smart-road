@@ -35,6 +35,17 @@ impl State {
     }
 
     pub fn update(&mut self) {
+        self.roads.iter_mut().for_each(|road| {
+            // Clean up finished cars and add their time to stats.
+            road.cleanup_cars(&mut self.stats);
+
+            // Add velocity to stats and move car.
+            road.cars.iter_mut().for_each(|car| {
+                self.stats.set_velocity(car.get_velocity());
+                car.move_car();
+            })
+        });
+
         self.grid.get_intersection();
         self.grid.update_intersection();
         self.grid.get_empty();

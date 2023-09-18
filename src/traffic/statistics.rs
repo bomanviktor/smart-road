@@ -1,10 +1,10 @@
 #[derive(PartialEq, Debug)]
 pub struct Statistics {
     max_vehicles: u32,
-    max_velocity: f64,
-    min_velocity: f64,
-    max_time: f64,
-    min_time: f64,
+    max_velocity: f32,
+    min_velocity: f32,
+    max_time: f32,
+    min_time: f32,
     close_calls: u32,
 }
 
@@ -26,12 +26,17 @@ impl Statistics {
             self.max_vehicles = max_vehicles;
         }
     }
-    pub fn set_max_velocity(&mut self, max_velocity: f64) {
+
+    pub fn set_velocity(&mut self, velocity: f32) {
+        self.set_min_velocity(velocity);
+        self.set_max_velocity(velocity);
+    }
+    pub fn set_max_velocity(&mut self, max_velocity: f32) {
         if max_velocity > self.max_velocity {
             self.max_velocity = max_velocity;
         }
     }
-    pub fn set_min_velocity(&mut self, min_velocity: f64) {
+    pub fn set_min_velocity(&mut self, min_velocity: f32) {
         if self.min_velocity == 0.0 {
             self.min_velocity = min_velocity;
         }
@@ -40,12 +45,17 @@ impl Statistics {
             self.min_velocity = min_velocity;
         }
     }
-    pub fn set_max_time(&mut self, max_time: f64) {
+
+    pub fn set_time(&mut self, time: f32) {
+        self.set_min_time(time);
+        self.set_max_time(time);
+    }
+    pub fn set_max_time(&mut self, max_time: f32) {
         if max_time > self.max_time {
             self.max_time = max_time;
         }
     }
-    pub fn set_min_time(&mut self, min_time: f64) {
+    pub fn set_min_time(&mut self, min_time: f32) {
         if self.min_time == 0.0 {
             self.min_time = min_time;
         }
@@ -53,26 +63,24 @@ impl Statistics {
             self.min_time = min_time;
         }
     }
-    pub fn set_close_calls(&mut self, close_calls: u32) {
-        if close_calls > self.close_calls {
-            self.close_calls = close_calls;
-        }
+    pub fn set_close_calls(&mut self) {
+        self.close_calls += 1;
     }
 
     // Getters
     pub fn max_vehicles(&self) -> u32 {
         self.max_vehicles
     }
-    pub fn max_velocity(&self) -> f64 {
+    pub fn max_velocity(&self) -> f32 {
         self.max_velocity
     }
-    pub fn min_velocity(&self) -> f64 {
+    pub fn min_velocity(&self) -> f32 {
         self.min_velocity
     }
-    pub fn max_time(&self) -> f64 {
+    pub fn max_time(&self) -> f32 {
         self.max_time
     }
-    pub fn min_time(&self) -> f64 {
+    pub fn min_time(&self) -> f32 {
         self.min_time
     }
     pub fn close_calls(&self) -> u32 {
