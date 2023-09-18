@@ -10,11 +10,18 @@ pub enum Turning {
     Right,
 }
 
+pub enum Velocity {
+    Up(f32),
+    Right(f32),
+    Down(f32),
+    Left(f32)
+}
+
 #[derive(PartialEq, Clone, Debug)]
 pub struct Car {
     x: f32,
     y: f32,
-    vel: f32,
+    vel: Velocity,
     direction: Direction,
     pub path: Path,
 }
@@ -32,7 +39,12 @@ impl Car {
         let car = Car {
             x,
             y,
-            vel: 1.0,
+            vel: match &direction {
+                Direction::North => Velocity::Down(1.0),
+                Direction::East => Velocity::Left(1.0),
+                Direction::South => Velocity::Up(1.0),
+                Direction::West => Velocity::Right(1.0),
+            },
             direction,
             path,
         };
