@@ -2,6 +2,8 @@ use crate::config::{
     ROAD_COLOR, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE,
 };
 
+use crate::render::textures::Textures;
+
 use macroquad::prelude::*;
 pub fn render_roads() {
     // Vertical road
@@ -118,4 +120,42 @@ pub fn render_roads() {
     );
 
      */
+}
+
+pub fn render_textured_roads(textures: &Textures) {
+    // Draw the background
+    draw_texture_ex(
+        &textures.bg,
+        0.0,
+        0.0,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(WINDOW_SIZE as f32, WINDOW_SIZE as f32)),
+            ..Default::default()
+        },
+    );
+    
+    // Draw the vertical road
+    draw_texture_ex(
+        &textures.road,
+        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
+        0.0,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(ROAD_WIDTH, WINDOW_SIZE as f32)),
+            ..Default::default()
+        },
+    );
+    
+    // Draw the horizontal road
+    draw_texture_ex(
+        &textures.road,
+        0.0,
+        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
+        WHITE,
+        DrawTextureParams {
+            dest_size: Some(vec2(WINDOW_SIZE as f32, ROAD_WIDTH)),
+            ..Default::default()
+        },
+    );
 }

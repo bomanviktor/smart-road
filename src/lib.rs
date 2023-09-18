@@ -73,4 +73,8 @@ pub mod render {
     pub mod roads;
 
     pub use roads::render_roads;
+
+    pub mod textures;
+
+    pub use textures::Textures;
 }
