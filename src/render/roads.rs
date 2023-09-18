@@ -1,24 +1,23 @@
-use crate::config::{ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE};
+use crate::config::{
+    BG_TILE_SIZE, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_TILE_SIZE, ROAD_WIDTH, SECTOR_WIDTH,
+    TILE_SIZE, WINDOW_SIZE,
+};
 
 use crate::render::textures::Textures;
 
 use macroquad::prelude::*;
 
 pub fn render_textured_roads(textures: &Textures) {
-    // Tile size for background and road
-    let bg_tile_size = WINDOW_SIZE as f32 / 10.0;
-    let road_tile_size = ROAD_WIDTH / 10.0;
-
     // Draw the background as 10x10 tiles
-    for x in 0..10 {
-        for y in 0..10 {
+    for x in 0..TILE_SIZE as u32 {
+        for y in 0..TILE_SIZE as u32 {
             draw_texture_ex(
                 &textures.bg,
-                x as f32 * bg_tile_size,
-                y as f32 * bg_tile_size,
+                x as f32 * BG_TILE_SIZE,
+                y as f32 * BG_TILE_SIZE,
                 WHITE,
                 DrawTextureParams {
-                    dest_size: Some(vec2(bg_tile_size, bg_tile_size)),
+                    dest_size: Some(vec2(BG_TILE_SIZE, BG_TILE_SIZE)),
                     ..Default::default()
                 },
             );
@@ -34,11 +33,11 @@ pub fn render_textured_roads(textures: &Textures) {
         for y in 0..WINDOW_SIZE / 10 {
             draw_texture_ex(
                 &textures.road,
-                vertical_road_start_x + x as f32 * road_tile_size,
+                vertical_road_start_x + x as f32 * ROAD_TILE_SIZE,
                 y as f32 * (WINDOW_SIZE as f32 / 10.0),
                 WHITE,
                 DrawTextureParams {
-                    dest_size: Some(vec2(road_tile_size, WINDOW_SIZE as f32 / 10.0)),
+                    dest_size: Some(vec2(ROAD_TILE_SIZE, WINDOW_SIZE as f32 / 10.0)),
                     ..Default::default()
                 },
             );
@@ -51,10 +50,10 @@ pub fn render_textured_roads(textures: &Textures) {
             draw_texture_ex(
                 &textures.road,
                 x as f32 * (WINDOW_SIZE as f32 / 10.0),
-                horizontal_road_start_y + y as f32 * road_tile_size,
+                horizontal_road_start_y + y as f32 * ROAD_TILE_SIZE,
                 WHITE,
                 DrawTextureParams {
-                    dest_size: Some(vec2(WINDOW_SIZE as f32 / 10.0, road_tile_size)),
+                    dest_size: Some(vec2(WINDOW_SIZE as f32 / 10.0, ROAD_TILE_SIZE)),
                     ..Default::default()
                 },
             );

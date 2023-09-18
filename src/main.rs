@@ -9,6 +9,8 @@ use smart_road::traffic::*;
 //use smart_road::render::textures::Textures;
 use smart_road::render::roads::render_textured_roads;
 
+use smart_road::render::grid::render_grid;
+
 #[macroquad::main(window_conf)]
 async fn main() {
     let mut state = State::new();
@@ -19,6 +21,7 @@ async fn main() {
 
         //render_roads();
         render_textured_roads(&textures);
+        render_grid();
 
         next_frame().await
     }
