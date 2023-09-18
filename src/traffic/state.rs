@@ -1,8 +1,9 @@
 use crate::traffic::car::Car;
 use crate::traffic::grid::Grid;
-use crate::traffic::lane::Lane;
+use crate::traffic::road::Road;
 use crate::traffic::statistics::*;
 use macroquad::rand::gen_range;
+use rand::prelude::IteratorRandom;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
@@ -14,7 +15,7 @@ pub enum Direction {
 
 #[derive(PartialEq)]
 pub struct State {
-    pub lanes: [Lane; 4],
+    pub roads: [Road; 4],
     pub grid: Grid,
     pub stats: Statistics,
 }
@@ -22,11 +23,11 @@ pub struct State {
 impl State {
     pub fn new() -> State {
         State {
-            lanes: [
-                Lane::new(Direction::North),
-                Lane::new(Direction::East),
-                Lane::new(Direction::South),
-                Lane::new(Direction::West),
+            roads: [
+                Road::default(),
+                Road::default(),
+                Road::default(),
+                Road::default(),
             ],
             grid: Grid::default(),
             stats: Statistics::default(),
@@ -42,15 +43,51 @@ impl State {
 
     pub fn add_car(&mut self, direction: Direction) {
         match direction {
-            Direction::North => self.lanes[0].add_car(Car::new(Direction::North)),
-            Direction::East => self.lanes[1].add_car(Car::new(Direction::East)),
-            Direction::South => self.lanes[2].add_car(Car::new(Direction::South)),
-            Direction::West => self.lanes[3].add_car(Car::new(Direction::West)),
+            Direction::North => {
+                let available_lanes = self.roads[0]
+                    .available_lines()
+                    .into_iter()
+                    .choose(&mut rand::thread_rng());
+
+                if let Some(lane) = available_lanes {
+                    self.roads[0].add_car(Car::new(direction, lane));
+                }
+            }
+            Direction::East => {
+                let available_lanes = self.roads[1]
+                    .available_lines()
+                    .into_iter()
+                    .choose(&mut rand::thread_rng());
+
+                if let Some(lane) = available_lanes {
+                    self.roads[1].add_car(Car::new(direction, lane));
+                }
+            }
+            Direction::South => {
+                let available_lanes = self.roads[2]
+                    .available_lines()
+                    .into_iter()
+                    .choose(&mut rand::thread_rng());
+
+                if let Some(lane) = available_lanes {
+                    self.roads[2].add_car(Car::new(direction, lane));
+                }
+            }
+            Direction::West => {
+                let available_lanes = self.roads[3]
+                    .available_lines()
+                    .into_iter()
+                    .choose(&mut rand::thread_rng());
+
+                if let Some(lane) = available_lanes {
+                    self.roads[3].add_car(Car::new(direction, lane));
+                }
+            }
         }
     }
 
     pub fn add_car_random(&mut self) {
-        match gen_range(0, 3) {
+        match gen_range(0, 4) {
             0 => self.add_car(Direction::North),
             1 => self.add_car(Direction::East),
             2 => self.add_car(Direction::South),

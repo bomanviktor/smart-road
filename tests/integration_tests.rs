@@ -27,16 +27,17 @@ mod test_state {
             state.add_car(Direction::West);
         }
 
+        // Check that there are only 3 cars per lane
         for i in 0..=3 {
-            assert_eq!(state.lanes[i].cars.len(), 10);
+            assert_eq!(state.roads[i].cars.len(), 3);
         }
 
         // Check if len of path is longer than 0
         // TODO: improve this test
         for i in 0..=3 {
-            for j in 0..10 {
-                assert!(state.lanes[i].cars[j].path.sectors.len() > 1);
-                assert!(state.lanes[i].cars[j].path.sectors.len() < 14);
+            for j in 0..3 {
+                assert!(state.roads[i].cars[j].path.sectors.len() > 6);
+                assert!(state.roads[i].cars[j].path.sectors.len() < 14);
             }
         }
     }
@@ -45,21 +46,30 @@ mod test_state {
     fn test_add_random() {
         let mut state = State::default();
         // Add cars
-        for _ in 0..10 {
+        for _ in 0..20 {
             state.add_car_random();
         }
         let mut cars = Vec::new();
 
-        for lane in state.lanes {
+        for lane in state.roads {
             cars.push(lane.cars);
         }
+
+        // Check if just the right amount of cars were added
+        assert_eq!(cars.iter().flatten().count(), 12);
 
         // Check if len of path is longer than 0
         // TODO: improve this test
         for car in cars.iter().flatten() {
-            assert!(car.path.sectors.len() > 1);
+            assert!(car.path.sectors.len() > 6);
             assert!(car.path.sectors.len() < 14);
         }
+    }
+
+    #[test]
+    fn test_update() {
+        let mut state = State::default();
+        state.update();
     }
 }
 
