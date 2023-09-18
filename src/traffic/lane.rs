@@ -4,7 +4,7 @@ use crate::traffic::Turning;
 type Lines = [[Option<Car>; 3]; 3];
 #[derive(PartialEq)]
 pub struct Lane {
-    cars: Vec<Car>,
+    pub cars: Vec<Car>,
     lines: Lines,
 }
 

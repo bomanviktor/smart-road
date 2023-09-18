@@ -50,7 +50,7 @@ impl State {
                     .choose(&mut rand::thread_rng());
 
                 if let Some(line) = available_lines {
-                    self.lanes[0].add_car(Car::new(Direction::North, line));
+                    self.lanes[0].add_car(Car::new(direction, line));
                 }
             }
             Direction::East => {
@@ -60,7 +60,7 @@ impl State {
                     .choose(&mut rand::thread_rng());
 
                 if let Some(line) = available_lines {
-                    self.lanes[1].add_car(Car::new(Direction::North, line));
+                    self.lanes[1].add_car(Car::new(direction, line));
                 }
             }
             Direction::South => {
@@ -70,7 +70,7 @@ impl State {
                     .choose(&mut rand::thread_rng());
 
                 if let Some(line) = available_lines {
-                    self.lanes[2].add_car(Car::new(Direction::North, line));
+                    self.lanes[2].add_car(Car::new(direction, line));
                 }
             }
             Direction::West => {
@@ -80,14 +80,14 @@ impl State {
                     .choose(&mut rand::thread_rng());
 
                 if let Some(line) = available_lines {
-                    self.lanes[3].add_car(Car::new(Direction::North, line));
+                    self.lanes[3].add_car(Car::new(direction, line));
                 }
             }
         }
     }
 
     pub fn add_car_random(&mut self) {
-        match gen_range(0, 3) {
+        match gen_range(0, 4) {
             0 => self.add_car(Direction::North),
             1 => self.add_car(Direction::East),
             2 => self.add_car(Direction::South),
