@@ -29,15 +29,15 @@ mod test_state {
 
         // Check that there are only 3 cars per lane
         for i in 0..=3 {
-            assert_eq!(state.lanes[i].cars.len(), 3);
+            assert_eq!(state.roads[i].cars.len(), 3);
         }
 
         // Check if len of path is longer than 0
         // TODO: improve this test
         for i in 0..=3 {
             for j in 0..3 {
-                assert!(state.lanes[i].cars[j].path.sectors.len() > 6);
-                assert!(state.lanes[i].cars[j].path.sectors.len() < 14);
+                assert!(state.roads[i].cars[j].path.sectors.len() > 6);
+                assert!(state.roads[i].cars[j].path.sectors.len() < 14);
             }
         }
     }
@@ -51,7 +51,7 @@ mod test_state {
         }
         let mut cars = Vec::new();
 
-        for lane in state.lanes {
+        for lane in state.roads {
             cars.push(lane.cars);
         }
 

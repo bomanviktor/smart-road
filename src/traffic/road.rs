@@ -1,66 +1,66 @@
 use crate::traffic::car::Car;
 use crate::traffic::Turning;
 
-type Lines = [[Option<Car>; 3]; 3];
+type Lanes = [[Option<Car>; 3]; 3];
 #[derive(PartialEq)]
-pub struct Lane {
+pub struct Road {
     pub cars: Vec<Car>,
-    lines: Lines,
+    lanes: Lanes,
 }
 
-impl Lane {
-    pub fn new() -> Lane {
-        Lane {
+impl Road {
+    pub fn new() -> Road {
+        Road {
             cars: Vec::new(),
-            lines: generate_lines(),
+            lanes: generate_lanes(),
         }
     }
 
     pub fn add_car(&mut self, car: Car) {
         match car.turning {
-            Turning::Left => self.lines[0][0] = Some(car.clone()),
-            Turning::Straight => self.lines[1][0] = Some(car.clone()),
-            Turning::Right => self.lines[2][0] = Some(car.clone()),
+            Turning::Left => self.lanes[0][0] = Some(car.clone()),
+            Turning::Straight => self.lanes[1][0] = Some(car.clone()),
+            Turning::Right => self.lanes[2][0] = Some(car.clone()),
         }
         self.cars.push(car)
     }
 
     pub fn available_lines(&self) -> Vec<Turning> {
         let available: Vec<bool> = self
-            .lines
+            .lanes
             .iter()
-            .map(|line| line[0].is_none() && line[1].is_none())
+            .map(|lane| lane[0].is_none() && lane[1].is_none())
             .collect();
 
-        let mut available_lines = Vec::new();
+        let mut available_lanes = Vec::new();
         for (i, l) in available.into_iter().enumerate() {
             match i {
                 0 => {
                     if l {
-                        available_lines.push(Turning::Left);
+                        available_lanes.push(Turning::Left);
                     }
                 }
                 1 => {
                     if l {
-                        available_lines.push(Turning::Straight);
+                        available_lanes.push(Turning::Straight);
                     }
                 }
                 _ => {
                     if l {
-                        available_lines.push(Turning::Right);
+                        available_lanes.push(Turning::Right);
                     }
                 }
             }
         }
-        available_lines
+        available_lanes
     }
 }
 
-fn generate_lines() -> Lines {
+fn generate_lanes() -> Lanes {
     [[None, None, None], [None, None, None], [None, None, None]]
 }
 
-impl Default for Lane {
+impl Default for Road {
     fn default() -> Self {
         Self::new()
     }

@@ -56,8 +56,8 @@ pub mod controls {
 pub mod traffic {
     pub mod car;
     pub mod grid;
-    pub mod lane;
     pub mod path;
+    pub mod road;
     pub mod state;
     pub mod statistics;
 
