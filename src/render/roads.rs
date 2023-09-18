@@ -1,31 +1,73 @@
-use crate::config::{
-    ROAD_COLOR, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE,
-};
+use crate::config::{ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE};
 
 use crate::render::textures::Textures;
 
 use macroquad::prelude::*;
-pub fn render_roads() {
-    // Vertical road
-    draw_rectangle(
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        0.0,
-        ROAD_WIDTH,
-        WINDOW_SIZE as f32,
-        ROAD_COLOR,
-    );
 
-    // Horizontal road
-    draw_rectangle(
-        0.0,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        WINDOW_SIZE as f32,
-        ROAD_WIDTH,
-        ROAD_COLOR,
-    );
+pub fn render_textured_roads(textures: &Textures) {
+    // Tile size for background and road
+    let bg_tile_size = WINDOW_SIZE as f32 / 10.0;
+    let road_tile_size = ROAD_WIDTH / 10.0;
+
+    // Draw the background as 10x10 tiles
+    for x in 0..10 {
+        for y in 0..10 {
+            draw_texture_ex(
+                &textures.bg,
+                x as f32 * bg_tile_size,
+                y as f32 * bg_tile_size,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(bg_tile_size, bg_tile_size)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    // Calculate where the vertical and horizontal roads start
+    let vertical_road_start_x = (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0;
+    let horizontal_road_start_y = (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0;
+
+    // Draw the vertical road as 10x10 tiles
+    for x in 0..10 {
+        for y in 0..WINDOW_SIZE / 10 {
+            draw_texture_ex(
+                &textures.road,
+                vertical_road_start_x + x as f32 * road_tile_size,
+                y as f32 * (WINDOW_SIZE as f32 / 10.0),
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(road_tile_size, WINDOW_SIZE as f32 / 10.0)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    // Draw the horizontal road as 10x10 tiles
+    for x in 0..WINDOW_SIZE / 10 {
+        for y in 0..10 {
+            draw_texture_ex(
+                &textures.road,
+                x as f32 * (WINDOW_SIZE as f32 / 10.0),
+                horizontal_road_start_y + y as f32 * road_tile_size,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(WINDOW_SIZE as f32 / 10.0, road_tile_size)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
     // THIS IS FOR DEV PURPOSES ONLY
     // Vertical lines
     for i in 1..12 {
+        if !(3..=9).contains(&i) {
+            // Skip corners
+            continue;
+        }
         draw_rectangle(
             i as f32 * SECTOR_WIDTH,
             0.0, //25.0 + i as f32 * 100.0,
@@ -41,6 +83,10 @@ pub fn render_roads() {
 
     // Horizontal lines
     for i in 1..12 {
+        if !(3..=9).contains(&i) {
+            // Skip corners
+            continue;
+        }
         draw_rectangle(
             0.0, // 25.0 + i as f32 * 100.0,
             i as f32 * SECTOR_WIDTH,
@@ -53,109 +99,4 @@ pub fn render_roads() {
             },
         );
     }
-
-    // Remove sectors from corners
-    draw_rectangle(
-        0.0, // 25.0 + i as f32 * 100.0,
-        0.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        0.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        0.0,
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-
-    /*
-    THIS IS FOR PRODUCTION USE
-    for i in 0..(WINDOW_SIZE / 100) {
-        // Vertical road lines
-        for j in 1..6 {
-            draw_rectangle(
-                (ROAD_WIDTH / 2.0) + (j as f32 * SECTOR_WIDTH),
-                0.0, //25.0 + i as f32 * 100.0,
-                ROAD_LINE_WIDTH,
-                WINDOW_SIZE as f32,
-                ROAD_LINE_COLOR,
-            );
-        }
-
-        // Horizontal road lines
-        for j in 1..6 {
-            draw_rectangle(
-                0.0, // 25.0 + i as f32 * 100.0,
-                (ROAD_WIDTH / 2.0) + (j as f32 * SECTOR_WIDTH),
-                WINDOW_SIZE as f32,
-                ROAD_LINE_WIDTH,
-                ROAD_LINE_COLOR,
-            );
-        }
-    }
-
-    // Remove lines in the center
-    draw_rectangle(
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        ROAD_WIDTH,
-        ROAD_WIDTH,
-        ROAD_COLOR,
-    );
-
-     */
-}
-
-pub fn render_textured_roads(textures: &Textures) {
-    // Draw the background
-    draw_texture_ex(
-        &textures.bg,
-        0.0,
-        0.0,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(vec2(WINDOW_SIZE as f32, WINDOW_SIZE as f32)),
-            ..Default::default()
-        },
-    );
-    
-    // Draw the vertical road
-    draw_texture_ex(
-        &textures.road,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        0.0,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(vec2(ROAD_WIDTH, WINDOW_SIZE as f32)),
-            ..Default::default()
-        },
-    );
-    
-    // Draw the horizontal road
-    draw_texture_ex(
-        &textures.road,
-        0.0,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(vec2(WINDOW_SIZE as f32, ROAD_WIDTH)),
-            ..Default::default()
-        },
-    );
 }
