@@ -7,7 +7,12 @@ pub mod config {
 
     pub const ROAD_LINE_LENGTH: f32 = 50.0;
 
-    pub const ROAD_COLOR: Color = Color::new(0.267, 0.294, 0.325, 1.0);
+    pub const TILE_SIZE: f32 = 10.0;
+
+    // Tile size for background and road
+    pub const BG_TILE_SIZE: f32 = WINDOW_SIZE as f32 / TILE_SIZE;
+    pub const ROAD_TILE_SIZE: f32 = ROAD_WIDTH / TILE_SIZE;
+
     pub const ROAD_LINE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
     pub const ROAD_WIDTH: f32 = WINDOW_SIZE as f32 / 2.0;
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
@@ -72,5 +77,13 @@ pub mod traffic {
 pub mod render {
     pub mod roads;
 
-    pub use roads::render_roads;
+    pub use roads::render_textured_roads;
+
+    pub mod textures;
+
+    pub use textures::Textures;
+
+    pub mod grid;
+
+    pub use grid::render_grid;
 }

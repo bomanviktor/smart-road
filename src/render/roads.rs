@@ -1,29 +1,72 @@
 use crate::config::{
-    ROAD_COLOR, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_WIDTH, SECTOR_WIDTH, WINDOW_SIZE,
+    BG_TILE_SIZE, ROAD_LINE_COLOR, ROAD_LINE_WIDTH, ROAD_TILE_SIZE, ROAD_WIDTH, SECTOR_WIDTH,
+    TILE_SIZE, WINDOW_SIZE,
 };
 
-use macroquad::prelude::*;
-pub fn render_roads() {
-    // Vertical road
-    draw_rectangle(
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        0.0,
-        ROAD_WIDTH,
-        WINDOW_SIZE as f32,
-        ROAD_COLOR,
-    );
+use crate::render::textures::Textures;
 
-    // Horizontal road
-    draw_rectangle(
-        0.0,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        WINDOW_SIZE as f32,
-        ROAD_WIDTH,
-        ROAD_COLOR,
-    );
+use macroquad::prelude::*;
+
+pub fn render_textured_roads(textures: &Textures) {
+    // Draw the background as 10x10 tiles
+    for x in 0..TILE_SIZE as u32 {
+        for y in 0..TILE_SIZE as u32 {
+            draw_texture_ex(
+                &textures.bg,
+                x as f32 * BG_TILE_SIZE,
+                y as f32 * BG_TILE_SIZE,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(BG_TILE_SIZE, BG_TILE_SIZE)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    // Calculate where the vertical and horizontal roads start
+    let vertical_road_start_x = (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0;
+    let horizontal_road_start_y = (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0;
+
+    // Draw the vertical road as 10x10 tiles
+    for x in 0..10 {
+        for y in 0..WINDOW_SIZE / 10 {
+            draw_texture_ex(
+                &textures.road,
+                vertical_road_start_x + x as f32 * ROAD_TILE_SIZE,
+                y as f32 * (WINDOW_SIZE as f32 / 10.0),
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(ROAD_TILE_SIZE, WINDOW_SIZE as f32 / 10.0)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
+    // Draw the horizontal road as 10x10 tiles
+    for x in 0..WINDOW_SIZE / 10 {
+        for y in 0..10 {
+            draw_texture_ex(
+                &textures.road,
+                x as f32 * (WINDOW_SIZE as f32 / 10.0),
+                horizontal_road_start_y + y as f32 * ROAD_TILE_SIZE,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(vec2(WINDOW_SIZE as f32 / 10.0, ROAD_TILE_SIZE)),
+                    ..Default::default()
+                },
+            );
+        }
+    }
+
     // THIS IS FOR DEV PURPOSES ONLY
     // Vertical lines
     for i in 1..12 {
+        if !(3..=9).contains(&i) {
+            // Skip corners
+            continue;
+        }
         draw_rectangle(
             i as f32 * SECTOR_WIDTH,
             0.0, //25.0 + i as f32 * 100.0,
@@ -39,6 +82,10 @@ pub fn render_roads() {
 
     // Horizontal lines
     for i in 1..12 {
+        if !(3..=9).contains(&i) {
+            // Skip corners
+            continue;
+        }
         draw_rectangle(
             0.0, // 25.0 + i as f32 * 100.0,
             i as f32 * SECTOR_WIDTH,
@@ -51,71 +98,4 @@ pub fn render_roads() {
             },
         );
     }
-
-    // Remove sectors from corners
-    draw_rectangle(
-        0.0, // 25.0 + i as f32 * 100.0,
-        0.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        0.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-    draw_rectangle(
-        0.0,
-        ROAD_WIDTH * 1.5 + ROAD_LINE_WIDTH, // 25.0 + i as f32 * 100.0,
-        (WINDOW_SIZE / 4) as f32,
-        (WINDOW_SIZE / 4) as f32,
-        BLACK,
-    );
-
-    /*
-    THIS IS FOR PRODUCTION USE
-    for i in 0..(WINDOW_SIZE / 100) {
-        // Vertical road lines
-        for j in 1..6 {
-            draw_rectangle(
-                (ROAD_WIDTH / 2.0) + (j as f32 * SECTOR_WIDTH),
-                0.0, //25.0 + i as f32 * 100.0,
-                ROAD_LINE_WIDTH,
-                WINDOW_SIZE as f32,
-                ROAD_LINE_COLOR,
-            );
-        }
-
-        // Horizontal road lines
-        for j in 1..6 {
-            draw_rectangle(
-                0.0, // 25.0 + i as f32 * 100.0,
-                (ROAD_WIDTH / 2.0) + (j as f32 * SECTOR_WIDTH),
-                WINDOW_SIZE as f32,
-                ROAD_LINE_WIDTH,
-                ROAD_LINE_COLOR,
-            );
-        }
-    }
-
-    // Remove lines in the center
-    draw_rectangle(
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        (WINDOW_SIZE as f32 - ROAD_WIDTH) / 2.0,
-        ROAD_WIDTH,
-        ROAD_WIDTH,
-        ROAD_COLOR,
-    );
-
-     */
 }
