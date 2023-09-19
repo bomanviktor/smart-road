@@ -42,6 +42,62 @@ mod test_state {
     }
 
     #[test]
+    fn test_car_move() {
+        use smart_road::traffic::Car;
+        use smart_road::traffic::Direction;
+        use smart_road::traffic::Turning;
+        use smart_road::traffic::Velocity;
+
+        for direction in &[
+            Direction::North,
+            Direction::East,
+            Direction::South,
+            Direction::West,
+        ] {
+            for turning in &[Turning::Left, Turning::Straight, Turning::Right] {
+                let mut car = Car::new(direction.clone(), turning.clone());
+                let initial_x = car.x;
+                let initial_y = car.y;
+
+                car.move_car();
+
+                match direction {
+                    Direction::North => {
+                        if *turning == Turning::Straight {
+                            assert!(car.y > initial_y);
+                            assert_eq!(car.x, initial_x);
+                            assert_eq!(car.vel, Velocity::Down(car.get_velocity()));
+                        }
+                    }
+                    Direction::East => {
+                        if *turning == Turning::Straight {
+                            // X should increase for East, Y should remain the same
+                            assert!(car.x < initial_x);
+                            assert_eq!(car.y, initial_y);
+                            assert_eq!(car.vel, Velocity::Left(car.get_velocity()));
+                        }
+                    }
+                    Direction::South => {
+                        if *turning == Turning::Straight {
+                            // Y should increase for South, X should remain the same
+                            assert!(car.y < initial_y);
+                            assert_eq!(car.x, initial_x);
+                            assert_eq!(car.vel, Velocity::Up(car.get_velocity()));
+                        }
+                    }
+                    Direction::West => {
+                        if *turning == Turning::Straight {
+                            assert!(car.x > initial_x);
+                            assert_eq!(car.y, initial_y);
+                            assert_eq!(car.vel, Velocity::Right(car.get_velocity()));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_add_random() {
         let mut state = State::default();
         // Add cars
