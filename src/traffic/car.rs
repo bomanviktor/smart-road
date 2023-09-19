@@ -33,7 +33,7 @@ pub struct Car {
 impl Car {
     pub fn new(direction: Direction, turning: Turning) -> Car {
         let path = Path::new(&direction, &turning);
-        let (x, y) = get_entry_coords(&path.sectors[0], &direction);
+        let (x, y) = get_entry_coords(&path.sectors[0]);
         Car {
             x,
             y,
@@ -53,7 +53,9 @@ impl Car {
 
     // Add functionality here
     pub fn move_car(&mut self) {
-        self.update_direction();
+        if !self.has_turned {
+            self.update_direction();
+        };
         self.move_in_path();
         match self.vel {
             Velocity::Up(v) => self.y -= v,
@@ -122,7 +124,7 @@ impl Car {
 
     pub fn update_direction(&mut self) {
         let next_index = self.path.current + 1;
-        if next_index > self.path.sectors.len() / 2 {
+        if next_index > self.path.sectors.len() / 2 + 1 {
             return;
         }
 
@@ -131,40 +133,51 @@ impl Car {
 
         match self.direction {
             Direction::North => {
-                if self.update_down(next) {
-                    println!("{}", next.get_y());
-                    if self.update_left(next) {
-                        self.vel = Velocity::Left(velocity);
-                    }
-                    if self.update_right(next) {
-                        self.vel = Velocity::Right(velocity);
-                    }
+                if self.update_down(next) && self.update_left(next) {
+                    self.vel = Velocity::Right(velocity);
+                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
+                }
+                if self.update_down(next) && self.update_right(next) {
+                    self.vel = Velocity::Left(velocity);
                     self.y = next.get_y() as f32 * SECTOR_WIDTH;
                     self.has_turned = true;
                 }
             }
             Direction::East => {
-                if self.update_right(next) && !self.update_up(next) {
-                    self.vel = Velocity::Up(velocity);
-                }
-                if self.update_right(next) && !self.update_down(next) {
+                if self.update_left(next) && self.update_up(next) {
                     self.vel = Velocity::Down(velocity);
+                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
+                }
+                if self.update_left(next) && self.update_down(next) {
+                    self.vel = Velocity::Up(velocity);
+                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
                 }
             }
             Direction::South => {
-                if self.update_up(next) && !self.update_left(next) {
-                    self.vel = Velocity::Left(velocity);
-                }
-                if self.update_up(next) && !self.update_right(next) {
+                if self.update_up(next) && self.update_left(next) {
                     self.vel = Velocity::Right(velocity);
+                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
+                }
+                if self.update_up(next) && self.update_right(next) {
+                    self.vel = Velocity::Left(velocity);
+                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
                 }
             }
             Direction::West => {
-                if self.update_left(next) && !self.update_up(next) {
-                    self.vel = Velocity::Up(velocity);
-                }
-                if self.update_left(next) && !self.update_down(next) {
+                if self.update_right(next) && self.update_up(next) {
                     self.vel = Velocity::Down(velocity);
+                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
+                }
+                if self.update_right(next) && self.update_down(next) {
+                    self.vel = Velocity::Up(velocity);
+                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
                 }
             }
         }
@@ -205,25 +218,11 @@ impl Car {
     }
 }
 
-fn get_entry_coords(p: &Sector, direction: &Direction) -> (f32, f32) {
-    match direction {
-        Direction::North => (
-            SECTOR_WIDTH * p.get_x() as f32,
-            SECTOR_WIDTH * p.get_y() as f32,
-        ),
-        Direction::East => (
-            SECTOR_WIDTH * p.get_x() as f32 - SECTOR_WIDTH,
-            SECTOR_WIDTH * p.get_y() as f32,
-        ),
-        Direction::South => (
-            SECTOR_WIDTH * p.get_x() as f32,
-            SECTOR_WIDTH * p.get_y() as f32 - SECTOR_WIDTH,
-        ),
-        Direction::West => (
-            SECTOR_WIDTH * p.get_x() as f32 + SECTOR_WIDTH,
-            SECTOR_WIDTH * p.get_y() as f32,
-        ),
-    }
+fn get_entry_coords(p: &Sector) -> (f32, f32) {
+    (
+        SECTOR_WIDTH * p.get_x() as f32,
+        SECTOR_WIDTH * p.get_y() as f32,
+    )
 }
 
 impl Display for Car {
