@@ -86,4 +86,8 @@ pub mod render {
     pub mod grid;
 
     pub use grid::render_grid;
+
+    pub mod car;
+
+    pub use car::render_car;
 }

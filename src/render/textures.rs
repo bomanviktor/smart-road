@@ -1,8 +1,10 @@
 use macroquad::prelude::*;
 
+#[derive(PartialEq, Clone)]
 pub struct Textures {
     pub road: Texture2D,
     pub bg: Texture2D,
+    pub car: Texture2D,
 }
 
 impl Textures {
@@ -12,6 +14,9 @@ impl Textures {
                 .await
                 .unwrap(),
             bg: macroquad::texture::load_texture("assets/RockBG.png")
+                .await
+                .unwrap(),
+            car: macroquad::texture::load_texture("assets/cars/Car_Sprite_Sheet_Resized.png")
                 .await
                 .unwrap(),
         }
