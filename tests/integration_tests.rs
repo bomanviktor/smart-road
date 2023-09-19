@@ -27,17 +27,16 @@ mod test_state {
             state.add_car(Direction::West);
         }
 
-        // Check that there are only 3 cars per lane
-        for i in 0..=3 {
-            assert_eq!(state.roads[i].cars.len(), 3);
-        }
-
         // Check if len of path is longer than 0
         // TODO: improve this test
-        for i in 0..=3 {
-            for j in 0..3 {
-                assert!(state.roads[i].cars[j].path.sectors.len() > 6);
-                assert!(state.roads[i].cars[j].path.sectors.len() < 14);
+
+        for road in state.roads {
+            for cars in road.cars {
+                assert_eq!(cars.len(), 1);
+                for car in cars {
+                    assert!(car.path.sectors.len() > 6);
+                    assert!(car.path.sectors.len() < 14);
+                }
             }
         }
     }
@@ -60,9 +59,11 @@ mod test_state {
 
         // Check if len of path is longer than 0
         // TODO: improve this test
-        for car in cars.iter().flatten() {
-            assert!(car.path.sectors.len() > 6);
-            assert!(car.path.sectors.len() < 14);
+        for cars in cars.iter().flatten() {
+            for car in cars {
+                assert!(car.path.sectors.len() > 6);
+                assert!(car.path.sectors.len() < 14);
+            }
         }
     }
 

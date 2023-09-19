@@ -1,77 +1,113 @@
 use crate::traffic::car::Car;
-use crate::traffic::{Statistics, Turning};
+use crate::traffic::{Direction, Statistics, Turning};
+use rand::prelude::IteratorRandom;
+use std::fmt::{Display, Formatter};
 
-type Lanes = [[Option<Car>; 3]; 3];
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Road {
-    pub cars: Vec<Car>,
-    lanes: Lanes,
+    direction: Direction,
+    pub cars: [Vec<Car>; 3],
 }
 
 impl Road {
-    pub fn new() -> Road {
+    pub fn new(direction: Direction) -> Road {
         Road {
-            cars: Vec::new(),
-            lanes: generate_lanes(),
+            direction,
+            cars: [Vec::new(), Vec::new(), Vec::new()],
         }
     }
 
     pub fn add_car(&mut self, car: Car) {
         match car.turning {
-            Turning::Left => self.lanes[0][0] = Some(car.clone()),
-            Turning::Straight => self.lanes[1][0] = Some(car.clone()),
-            Turning::Right => self.lanes[2][0] = Some(car.clone()),
+            Turning::Left => self.cars[0].push(car.clone()),
+            Turning::Straight => self.cars[1].push(car.clone()),
+            Turning::Right => self.cars[2].push(car.clone()),
         }
-        self.cars.push(car)
     }
 
-    pub fn available_lines(&self) -> Vec<Turning> {
-        let available: Vec<bool> = self
-            .lanes
-            .iter()
-            .map(|lane| lane[0].is_none() && lane[1].is_none())
-            .collect();
+    pub fn get_available_path(&self) -> Option<Turning> {
+        let lanes = self.available_lanes();
+        let mut paths = Vec::new();
 
-        let mut available_lanes = Vec::new();
-        for (i, l) in available.into_iter().enumerate() {
+        for (i, available) in lanes.into_iter().enumerate() {
             match i {
                 0 => {
-                    if l {
-                        available_lanes.push(Turning::Left);
+                    if available {
+                        paths.push(Turning::Left);
                     }
                 }
                 1 => {
-                    if l {
-                        available_lanes.push(Turning::Straight);
+                    if available {
+                        paths.push(Turning::Straight);
                     }
                 }
                 _ => {
-                    if l {
-                        available_lanes.push(Turning::Right);
+                    if available {
+                        paths.push(Turning::Right);
                     }
                 }
             }
         }
-        available_lanes
+
+        paths.into_iter().choose(&mut rand::thread_rng())
+    }
+    pub fn can_add_car(&self) -> bool {
+        let lanes = self.available_lanes();
+        lanes[0] || lanes[1] || lanes[2]
+    }
+    fn available_lanes(&self) -> [bool; 3] {
+        let mut available = [false, false, false];
+
+        if self.cars[0].is_empty() {
+            available[0] = true;
+        } else {
+            let prev_car = self.cars[0].iter().next_back().unwrap();
+            if prev_car.path.current > 1 {
+                available[0] = true;
+            }
+        }
+
+        if self.cars[1].is_empty() {
+            available[1] = true;
+        } else {
+            let prev_car = self.cars[1].iter().next_back().unwrap();
+            if prev_car.path.current > 1 {
+                available[1] = true;
+            }
+        }
+
+        if self.cars[2].is_empty() {
+            available[2] = true;
+        } else {
+            let prev_car = self.cars[2].iter().next_back().unwrap();
+            if prev_car.path.current > 1 {
+                available[2] = true;
+            }
+        }
+
+        available
     }
 
     // Add time for all cars that reached their destination and then remove from vector.
     pub fn cleanup_cars(&mut self, stats: &mut Statistics) {
-        self.cars
-            .iter()
-            .filter(|car| car.is_done())
-            .for_each(|car| car.add_time(stats));
+        self.cars.iter().for_each(|cars| {
+            cars.iter()
+                .filter(|car| car.is_done())
+                .for_each(|car| car.add_time(stats))
+        });
 
-        self.cars.retain(|car| !car.is_done());
+        self.cars[0].retain(|car| !car.is_done());
+        self.cars[1].retain(|car| !car.is_done());
+        self.cars[2].retain(|car| !car.is_done());
     }
 }
 
-fn generate_lanes() -> Lanes {
-    [[None, None, None], [None, None, None], [None, None, None]]
-}
-
-impl Default for Road {
-    fn default() -> Self {
-        Self::new()
+impl Display for Road {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?}:\nLeft: {:?} \nStraight: {:?}\nRight: {:?}",
+            self.direction, self.cars[0], self.cars[1], self.cars[2]
+        )
     }
 }
