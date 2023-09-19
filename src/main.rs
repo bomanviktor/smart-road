@@ -18,6 +18,7 @@ async fn main() {
     loop {
         clear_background(BLACK);
         handle_input(&mut state);
+        state.update();
 
         //render_roads();
         render_textured_roads(&textures);

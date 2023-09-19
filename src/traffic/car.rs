@@ -1,6 +1,6 @@
 use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Statistics};
+use crate::traffic::{Direction, Grid, Statistics};
 use std::time::SystemTime;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
@@ -19,8 +19,8 @@ pub enum Velocity {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct Car {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
     vel: Velocity,
     pub turning: Turning,
     pub path: Path,
@@ -66,6 +66,64 @@ impl Car {
             Velocity::Left(value) => value,
         }
     }
+
+    pub fn move_in_path(&mut self) {
+        let next_index = self.path.current + 1;
+        if next_index >= self.path.sectors.len() {
+            return;
+        }
+
+        let next = &self.path.sectors[next_index];
+
+        match self.vel {
+            Velocity::Up(_) => {
+                if self.update_up(next) {
+                    self.path.current += 1;
+                }
+            }
+            Velocity::Right(_) => {
+                if self.update_right(next) {
+                    self.path.current += 1;
+                }
+            }
+            Velocity::Down(_) => {
+                if self.update_down(next) {
+                    self.path.current += 1;
+                }
+            }
+            Velocity::Left(_) => {
+                if self.update_left(next) {
+                    self.path.current += 1;
+                }
+            }
+        }
+    }
+
+    fn update_up(&self, next: &Sector) -> bool {
+        self.y <= next.get_y() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_right(&self, next: &Sector) -> bool {
+        self.x >= next.get_x() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_down(&self, next: &Sector) -> bool {
+        self.y >= next.get_y() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_left(&self, next: &Sector) -> bool {
+        self.x <= next.get_x() as f32 * SECTOR_WIDTH
+    }
+
+    pub fn update_in_grid(&self, grid: &mut Grid) {
+        let x = self.path.sectors[self.path.current].get_x();
+        let y = self.path.sectors[self.path.current].get_y();
+
+        if (3..=8).contains(&x) && (3..=8).contains(&y) {
+            grid.insert_car_to_intersection(self.clone());
+        }
+    }
+
     /*
         pub fn accelerate(&mut self, acceleration: f32) {
             self.vel += acceleration
@@ -83,29 +141,12 @@ impl Car {
 
     // Check if the car has reached its destination
     pub fn is_done(&self) -> bool {
-        if self.path.sectors.len() - 1 != self.path.current {
-            return false;
+        match self.vel {
+            Velocity::Up(_) => self.y <= 0.0,
+            Velocity::Right(_) => self.x >= WINDOW_SIZE as f32 - SECTOR_WIDTH,
+            Velocity::Down(_) => self.y >= WINDOW_SIZE as f32 - SECTOR_WIDTH,
+            Velocity::Left(_) => self.x <= 0.0,
         }
-
-        let last_sector = self.path.sectors.iter().next_back().unwrap();
-
-        if last_sector.get_x() == 0 {
-            return self.x == 0.0;
-        }
-
-        if last_sector.get_x() == 11 {
-            return self.x == WINDOW_SIZE as f32 - SECTOR_WIDTH;
-        }
-
-        if last_sector.get_y() == 0 {
-            return self.y == 0.0;
-        }
-
-        if last_sector.get_y() == 11 {
-            return self.y == WINDOW_SIZE as f32 - SECTOR_WIDTH;
-        }
-
-        false
     }
 }
 

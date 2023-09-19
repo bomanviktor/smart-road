@@ -34,8 +34,9 @@ impl Grid {
     }
 
     pub fn insert_car_to_intersection(&mut self, car: Car) {
-        let x = car.path.sectors[0].get_x();
-        let y = car.path.sectors[0].get_y();
+        let i = car.path.current;
+        let x = car.path.sectors[i].get_x();
+        let y = car.path.sectors[i].get_y();
         self.intersection[x - 3][y - 3] = Some(car);
     }
 
