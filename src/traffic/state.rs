@@ -12,7 +12,7 @@ pub enum Direction {
     West,
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct State {
     pub roads: [Road; 4],
     pub grid: Grid,
@@ -40,13 +40,13 @@ impl State {
 
             // Get all cars from all paths from each road.
             road.cars.iter_mut().for_each(|cars| {
+
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.get_velocity());
                     car.move_car();
-                    println!("{:?}", car);
                 })
-            })
+            });
         });
 
         self.grid.get_intersection();
@@ -97,11 +97,10 @@ impl State {
         }
     }
 
-    pub fn update_path_and_grid(&mut self) {
+    pub fn update_grid(&mut self) {
         self.roads.iter_mut().for_each(|road| {
             road.cars.iter_mut().for_each(|cars| {
                 cars.iter_mut().for_each(|car| {
-                    car.move_in_path();
                     car.update_in_grid(&mut self.grid);
                 })
             })

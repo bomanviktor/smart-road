@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Grid, Statistics};
@@ -44,12 +45,12 @@ impl Car {
             path,
             time: SystemTime::now(),
         };
-        println!("{:?}", car.path);
         car
     }
 
     // Add functionality here
     pub fn move_car(&mut self) {
+        self.move_in_path();
         match self.vel {
             Velocity::Up(v) => self.y -= v,
             Velocity::Right(v) => self.x += v,
@@ -67,7 +68,7 @@ impl Car {
         }
     }
 
-    pub fn move_in_path(&mut self) {
+    fn move_in_path(&mut self) {
         let next_index = self.path.current + 1;
         if next_index >= self.path.sectors.len() {
             return;
@@ -155,4 +156,14 @@ fn get_entry_coords(p: &Sector) -> (f32, f32) {
         SECTOR_WIDTH * p.get_x() as f32,
         SECTOR_WIDTH * p.get_y() as f32,
     )
+}
+
+impl Display for Car {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f,
+               "(x: {}, y: {})\n\
+                Velocity: {:?}\n\
+                Current sector: {:?}",
+               self.x, self.y, self.vel, self.path.sectors[self.path.current])
+    }
 }

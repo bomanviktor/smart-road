@@ -1,8 +1,9 @@
+use std::fmt::{Display, Formatter};
 use crate::traffic::car::Car;
 use crate::traffic::{Direction, Statistics, Turning};
 use rand::prelude::IteratorRandom;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct Road {
     direction: Direction,
     pub cars: [Vec<Car>; 3],
@@ -98,5 +99,12 @@ impl Road {
         self.cars[0].retain(|car| !car.is_done());
         self.cars[1].retain(|car| !car.is_done());
         self.cars[2].retain(|car| !car.is_done());
+    }
+}
+
+impl Display for Road {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}:\nLeft: {:?} \nStraight: {:?}\nRight: {:?}",
+               self.direction, self.cars[0], self.cars[1], self.cars[2])
     }
 }

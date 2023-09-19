@@ -3,7 +3,7 @@ use crate::traffic::path::Sector;
 
 type Intersection = [[Option<Car>; 6]; 6];
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Grid {
     intersection: Intersection, // None if no car, Some if there is a car
     occupied_sectors: Vec<Sector>,
