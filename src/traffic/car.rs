@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
 use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Grid, Statistics};
+use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
@@ -25,14 +25,16 @@ pub struct Car {
     vel: Velocity,
     pub turning: Turning,
     pub path: Path,
+    pub has_turned: bool,
+    direction: Direction,
     time: SystemTime,
 }
 
 impl Car {
     pub fn new(direction: Direction, turning: Turning) -> Car {
         let path = Path::new(&direction, &turning);
-        let (x, y) = get_entry_coords(&path.sectors[0]);
-        let car = Car {
+        let (x, y) = get_entry_coords(&path.sectors[0], &direction);
+        Car {
             x,
             y,
             vel: match &direction {
@@ -43,13 +45,15 @@ impl Car {
             },
             turning,
             path,
+            has_turned: false,
+            direction,
             time: SystemTime::now(),
-        };
-        car
+        }
     }
 
     // Add functionality here
     pub fn move_car(&mut self) {
+        self.update_direction();
         self.move_in_path();
         match self.vel {
             Velocity::Up(v) => self.y -= v,
@@ -101,19 +105,69 @@ impl Car {
     }
 
     fn update_up(&self, next: &Sector) -> bool {
-        self.y <= next.get_y() as f32 * SECTOR_WIDTH
+        self.y < next.get_y() as f32 * SECTOR_WIDTH
     }
 
     fn update_right(&self, next: &Sector) -> bool {
-        self.x >= next.get_x() as f32 * SECTOR_WIDTH
+        self.x > next.get_x() as f32 * SECTOR_WIDTH
     }
 
     fn update_down(&self, next: &Sector) -> bool {
-        self.y >= next.get_y() as f32 * SECTOR_WIDTH
+        self.y > next.get_y() as f32 * SECTOR_WIDTH
     }
 
     fn update_left(&self, next: &Sector) -> bool {
-        self.x <= next.get_x() as f32 * SECTOR_WIDTH
+        self.x < next.get_x() as f32 * SECTOR_WIDTH
+    }
+
+    pub fn update_direction(&mut self) {
+        let next_index = self.path.current + 1;
+        if next_index > self.path.sectors.len() / 2 {
+            return;
+        }
+
+        let velocity = self.get_velocity();
+        let next = &self.path.sectors[next_index];
+
+        match self.direction {
+            Direction::North => {
+                if self.update_down(next) {
+                    println!("{}", next.get_y());
+                    if self.update_left(next) {
+                        self.vel = Velocity::Left(velocity);
+                    }
+                    if self.update_right(next) {
+                        self.vel = Velocity::Right(velocity);
+                    }
+                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
+                    self.has_turned = true;
+                }
+            }
+            Direction::East => {
+                if self.update_right(next) && !self.update_up(next) {
+                    self.vel = Velocity::Up(velocity);
+                }
+                if self.update_right(next) && !self.update_down(next) {
+                    self.vel = Velocity::Down(velocity);
+                }
+            }
+            Direction::South => {
+                if self.update_up(next) && !self.update_left(next) {
+                    self.vel = Velocity::Left(velocity);
+                }
+                if self.update_up(next) && !self.update_right(next) {
+                    self.vel = Velocity::Right(velocity);
+                }
+            }
+            Direction::West => {
+                if self.update_left(next) && !self.update_up(next) {
+                    self.vel = Velocity::Up(velocity);
+                }
+                if self.update_left(next) && !self.update_down(next) {
+                    self.vel = Velocity::Down(velocity);
+                }
+            }
+        }
     }
 
     pub fn update_in_grid(&self, grid: &mut Grid) {
@@ -151,19 +205,43 @@ impl Car {
     }
 }
 
-fn get_entry_coords(p: &Sector) -> (f32, f32) {
-    (
-        SECTOR_WIDTH * p.get_x() as f32,
-        SECTOR_WIDTH * p.get_y() as f32,
-    )
+fn get_entry_coords(p: &Sector, direction: &Direction) -> (f32, f32) {
+    match direction {
+        Direction::North => (
+            SECTOR_WIDTH * p.get_x() as f32,
+            SECTOR_WIDTH * p.get_y() as f32,
+        ),
+        Direction::East => (
+            SECTOR_WIDTH * p.get_x() as f32 - SECTOR_WIDTH,
+            SECTOR_WIDTH * p.get_y() as f32,
+        ),
+        Direction::South => (
+            SECTOR_WIDTH * p.get_x() as f32,
+            SECTOR_WIDTH * p.get_y() as f32 - SECTOR_WIDTH,
+        ),
+        Direction::West => (
+            SECTOR_WIDTH * p.get_x() as f32 + SECTOR_WIDTH,
+            SECTOR_WIDTH * p.get_y() as f32,
+        ),
+    }
 }
 
 impl Display for Car {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f,
-               "(x: {}, y: {})\n\
+        write!(
+            f,
+            "(x: {}, y: {})\n\
                 Velocity: {:?}\n\
-                Current sector: {:?}",
-               self.x, self.y, self.vel, self.path.sectors[self.path.current])
+                Turning: {:?}\n\
+                Sector index: {}\n\
+                Current sector: (x: {}, y: {})",
+            self.x,
+            self.y,
+            self.vel,
+            self.turning,
+            self.path.current,
+            self.path.sectors[self.path.current].get_x(),
+            self.path.sectors[self.path.current].get_y()
+        )
     }
 }

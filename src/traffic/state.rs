@@ -40,11 +40,11 @@ impl State {
 
             // Get all cars from all paths from each road.
             road.cars.iter_mut().for_each(|cars| {
-
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.get_velocity());
                     car.move_car();
+                    println!("{}", car);
                 })
             });
         });

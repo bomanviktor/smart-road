@@ -34,12 +34,14 @@ mod test_state {
 
         // Check if len of path is longer than 0
         // TODO: improve this test
+
         for i in 0..=3 {
             for j in 0..3 {
                 assert!(state.roads[i].cars[j].path.sectors.len() > 6);
                 assert!(state.roads[i].cars[j].path.sectors.len() < 14);
             }
         }
+
     }
 
     #[test]
@@ -60,9 +62,11 @@ mod test_state {
 
         // Check if len of path is longer than 0
         // TODO: improve this test
-        for car in cars.iter().flatten() {
-            assert!(car.path.sectors.len() > 6);
-            assert!(car.path.sectors.len() < 14);
+        for cars in cars.iter().flatten() {
+            for car in cars {
+                assert!(car.path.sectors.len() > 6);
+                assert!(car.path.sectors.len() < 14);
+            }
         }
     }
 

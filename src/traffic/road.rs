@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter};
 use crate::traffic::car::Car;
 use crate::traffic::{Direction, Statistics, Turning};
 use rand::prelude::IteratorRandom;
+use std::fmt::{Display, Formatter};
 
 #[derive(PartialEq, Debug)]
 pub struct Road {
@@ -104,7 +104,10 @@ impl Road {
 
 impl Display for Road {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}:\nLeft: {:?} \nStraight: {:?}\nRight: {:?}",
-               self.direction, self.cars[0], self.cars[1], self.cars[2])
+        write!(
+            f,
+            "{:?}:\nLeft: {:?} \nStraight: {:?}\nRight: {:?}",
+            self.direction, self.cars[0], self.cars[1], self.cars[2]
+        )
     }
 }
