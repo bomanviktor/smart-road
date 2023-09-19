@@ -4,9 +4,9 @@ use macroquad::prelude::*;
 
 use smart_road::config::window_conf;
 use smart_road::controls::handle_input;
-//use smart_road::render::render_roads;
+
 use smart_road::traffic::*;
-//use smart_road::render::textures::Textures;
+
 use smart_road::render::roads::render_textured_roads;
 
 use smart_road::render::car::render_car;
@@ -24,9 +24,13 @@ async fn main() {
         render_textured_roads(&textures);
         render_grid();
 
+        state.update();
+
         for road in &state.roads {
-            for car in &road.cars {
-                render_car(car, &textures.car);
+            for cars in &road.cars {
+                for car in cars {
+                    render_car(car, &textures.car);
+                }
             }
         }
 

@@ -22,7 +22,7 @@ pub enum Velocity {
 pub struct Car {
     pub x: f32,
     pub y: f32,
-    vel: Velocity,
+    pub vel: Velocity,
     pub turning: Turning,
     pub path: Path,
     pub has_turned: bool,
