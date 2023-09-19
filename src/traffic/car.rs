@@ -1,6 +1,7 @@
-use crate::config::SECTOR_WIDTH;
+use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::Direction;
+use crate::traffic::{Direction, Statistics};
+use std::time::SystemTime;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Turning {
@@ -23,6 +24,7 @@ pub struct Car {
     vel: Velocity,
     pub turning: Turning,
     pub path: Path,
+    time: SystemTime,
 }
 
 impl Car {
@@ -38,8 +40,9 @@ impl Car {
                 Direction::South => Velocity::Up(1.0),
                 Direction::West => Velocity::Right(1.0),
             },
-            turning: turning.clone(),
+            turning,
             path,
+            time: SystemTime::now(),
         };
         println!("{:?}", car.path);
         car
@@ -54,6 +57,15 @@ impl Car {
             Velocity::Left(v) => self.x -= v,
         }
     }
+
+    pub fn get_velocity(&self) -> f32 {
+        match self.vel {
+            Velocity::Up(value) => value,
+            Velocity::Right(value) => value,
+            Velocity::Down(value) => value,
+            Velocity::Left(value) => value,
+        }
+    }
     /*
         pub fn accelerate(&mut self, acceleration: f32) {
             self.vel += acceleration
@@ -63,6 +75,38 @@ impl Car {
             self.vel -= de_acceleration
         }
     */
+
+    pub fn add_time(&self, stats: &mut Statistics) {
+        let duration = SystemTime::now().duration_since(self.time).unwrap();
+        stats.set_time(duration.as_secs_f32());
+    }
+
+    // Check if the car has reached its destination
+    pub fn is_done(&self) -> bool {
+        if self.path.sectors.len() - 1 != self.path.current {
+            return false;
+        }
+
+        let last_sector = self.path.sectors.iter().next_back().unwrap();
+
+        if last_sector.get_x() == 0 {
+            return self.x == 0.0;
+        }
+
+        if last_sector.get_x() == 11 {
+            return self.x == WINDOW_SIZE as f32 - SECTOR_WIDTH;
+        }
+
+        if last_sector.get_y() == 0 {
+            return self.y == 0.0;
+        }
+
+        if last_sector.get_y() == 11 {
+            return self.y == WINDOW_SIZE as f32 - SECTOR_WIDTH;
+        }
+
+        false
+    }
 }
 
 fn get_entry_coords(p: &Sector) -> (f32, f32) {
