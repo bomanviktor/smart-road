@@ -92,7 +92,7 @@ mod test_statistics {
     #[test]
     fn min_time() {
         let mut stats = Statistics::new();
-        let n = gen_range(1, 100) as f64;
+        let n = gen_range(1, 100) as f32;
 
         stats.set_min_time(n);
         assert_eq!(stats.min_time(), n);
@@ -107,7 +107,7 @@ mod test_statistics {
     #[test]
     fn max_time() {
         let mut stats = Statistics::new();
-        let n = gen_range(1, 100) as f64;
+        let n = gen_range(1, 100) as f32;
 
         stats.set_max_time(n);
         assert_eq!(stats.max_time(), n);
@@ -119,7 +119,7 @@ mod test_statistics {
     #[test]
     fn min_velocity() {
         let mut stats = Statistics::new();
-        let n = gen_range(1, 100) as f64;
+        let n = gen_range(1, 100) as f32;
 
         stats.set_min_velocity(n);
         assert_eq!(stats.min_velocity(), n);
@@ -134,7 +134,7 @@ mod test_statistics {
     #[test]
     fn max_velocity() {
         let mut stats = Statistics::new();
-        let n = gen_range(1, 100) as f64;
+        let n = gen_range(1, 100) as f32;
 
         stats.set_max_velocity(n);
         assert_eq!(stats.max_velocity(), n);
