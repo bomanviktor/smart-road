@@ -16,6 +16,8 @@ pub mod config {
     pub const ROAD_LINE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
     pub const ROAD_WIDTH: f32 = WINDOW_SIZE as f32 / 2.0;
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
+
+    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 2.0) as usize + 1;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
