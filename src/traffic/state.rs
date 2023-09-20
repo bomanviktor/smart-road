@@ -43,19 +43,18 @@ impl State {
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.get_velocity());
+                    self.grid.update_grid(car.clone());
+                    println!("{}", self.grid);
                     car.move_car();
-                    println!("{}", car);
                 })
             });
         });
 
-        self.grid.get_intersection();
-        self.grid.update_intersection();
-        self.grid.get_empty();
-        self.grid.get_occupied();
+        self.grid.refresh_grid();
     }
 
     pub fn add_car(&mut self, direction: Direction) {
+        // self.grid.display_intersection();
         match direction {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
@@ -95,16 +94,6 @@ impl State {
             2 => self.add_car(Direction::South),
             _ => self.add_car(Direction::West),
         }
-    }
-
-    pub fn update_grid(&mut self) {
-        self.roads.iter_mut().for_each(|road| {
-            road.cars.iter_mut().for_each(|cars| {
-                cars.iter_mut().for_each(|car| {
-                    car.update_in_grid(&mut self.grid);
-                })
-            })
-        })
     }
 }
 

@@ -1,6 +1,6 @@
 use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Grid, Statistics};
+use crate::traffic::{Direction, Statistics};
 use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
@@ -72,6 +72,14 @@ impl Car {
             Velocity::Down(value) => value,
             Velocity::Left(value) => value,
         }
+    }
+
+    pub fn get_sector(&self) -> Sector {
+        self.path.sectors[self.path.current].clone()
+    }
+    pub fn get_borders(&self) -> (f32, f32, f32, f32) {
+        // Top left, top right, bottom right, bottom left
+        (self.x, self.x + SECTOR_WIDTH, self.y + SECTOR_WIDTH, self.y)
     }
 
     fn move_in_path(&mut self) {
@@ -183,16 +191,13 @@ impl Car {
         }
     }
 
+    /*
     pub fn update_in_grid(&self, grid: &mut Grid) {
         let x = self.path.sectors[self.path.current].get_x();
         let y = self.path.sectors[self.path.current].get_y();
-
-        if (3..=8).contains(&x) && (3..=8).contains(&y) {
-            grid.insert_car_to_intersection(self.clone());
-        }
     }
 
-    /*
+
         pub fn accelerate(&mut self, acceleration: f32) {
             self.vel += acceleration
         }
