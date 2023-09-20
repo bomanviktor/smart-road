@@ -1,5 +1,6 @@
 use crate::traffic::car::Car;
 use crate::traffic::path::Sector;
+use crate::traffic::Moving;
 use std::fmt::{Display, Formatter};
 
 type Sectors = [[Option<Car>; 12]; 12];
@@ -7,7 +8,7 @@ type Intersection = [Vec<Option<Car>>; 6];
 
 #[derive(Clone, PartialEq, Debug)]
 pub struct Grid {
-    sectors: Sectors, // None if no car, Some if there is a car
+    pub sectors: Sectors, // None if no car, Some if there is a car
     occupied_sectors: Vec<Sector>,
     empty_sectors: Vec<Sector>,
 }
@@ -25,6 +26,18 @@ impl Grid {
         let x = car.get_sector().get_x();
         let y = car.get_sector().get_y();
         self.sectors[x][y] = Some(car);
+        /*
+        for (x, column) in self.sectors.clone().into_iter().enumerate() {
+            for (y, car) in column.into_iter().enumerate() {
+                if car.is_none() {
+                    self.empty_sectors.push(Sector::new(x, y));
+                } else {
+                    self.occupied_sectors.push(Sector::new(x, y));
+                }
+            }
+        }
+
+         */
     }
 
     pub fn get_intersection(&self) -> Intersection {
@@ -41,6 +54,33 @@ impl Grid {
         intersection
     }
 
+    pub fn get_cars_ahead(&self, car: &Car) -> [Option<Car>; 3] {
+        let x = car.get_sector().get_x();
+        let y = car.get_sector().get_y();
+        match car.moving {
+            Moving::Up => [
+                self.get_car_at_coords(x - 1, y - 1),
+                self.get_car_at_coords(x, y - 1),
+                self.get_car_at_coords(x + 1, y - 1),
+            ],
+            Moving::Right => [
+                self.get_car_at_coords(x + 1, y - 1),
+                self.get_car_at_coords(x + 1, y),
+                self.get_car_at_coords(x + 1, y + 1),
+            ],
+            Moving::Down => [
+                self.get_car_at_coords(x - 1, y + 1),
+                self.get_car_at_coords(x, y + 1),
+                self.get_car_at_coords(x + 1, y + 1),
+            ],
+            Moving::Left => [
+                self.get_car_at_coords(x - 1, y - 1),
+                self.get_car_at_coords(x - 1, y),
+                self.get_car_at_coords(x - 1, y + 1),
+            ],
+        }
+    }
+
     pub fn get_occupied(&self) -> &Vec<Sector> {
         &self.occupied_sectors
     }
@@ -48,10 +88,15 @@ impl Grid {
         &self.empty_sectors
     }
 
+    pub fn get_car_at_coords(&self, x: usize, y: usize) -> Option<Car> {
+        println!("{:?}", self.sectors[x][y].clone());
+        self.sectors[x][y].clone()
+    }
+
     pub fn display_intersection(&self) {
         for (i, row) in self.get_intersection().iter().enumerate() {
             print!("{} ", i + 1);
-            row.iter().rev().for_each(|car| {
+            row.iter().for_each(|car| {
                 if car.is_none() {
                     print!("[ ]");
                 } else {
@@ -60,7 +105,7 @@ impl Grid {
             });
             println!();
         }
-        println!("----------------------------");
+        println!("--------------------");
     }
 
     pub fn refresh_grid(&mut self) {

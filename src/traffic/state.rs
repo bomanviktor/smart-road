@@ -42,10 +42,11 @@ impl State {
             road.cars.iter_mut().for_each(|cars| {
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
-                    self.stats.set_velocity(car.get_velocity());
+                    self.stats.set_velocity(car.vel);
                     self.grid.update_grid(car.clone());
-                    println!("{}", self.grid);
-                    car.move_car();
+                    // self.grid.display_intersection();
+                    // println!("{}", self.grid);
+                    car.move_car(&self.grid);
                 })
             });
         });
