@@ -1,5 +1,4 @@
 use macroquad::rand::gen_range;
-use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
 use crate::traffic::path::{Path, Sector};
@@ -144,9 +143,6 @@ impl Car {
         if self.vel < SPEED_LIMIT {
             self.vel += new_vel;
         }
-        if self.vel > SPEED_LIMIT {
-            self.vel = SPEED_LIMIT;
-        }
     }
 
     pub fn brake(&mut self, distance: f32) {
@@ -281,14 +277,8 @@ impl Car {
 
     /// ### get_sector
     /// Get the sector of a `Car` specified by `n`.
-    pub fn sector(&self, n: isize) -> Sector {
-        let i = if n < 0 {
-            self.index - (-n as usize)
-        } else {
-            self.index + n as usize
-        };
-
-        self.path.sectors[i].clone()
+    pub fn sector(&self, n: usize) -> Sector {
+        self.path.sectors[self.index + n].clone()
     }
 
     /// ### get_borders
@@ -337,29 +327,5 @@ fn get_entry_coords(p: &Sector, direction: &Direction) -> (f32, f32) {
             SECTOR_WIDTH * p.get_x() as f32,
             SECTOR_WIDTH * p.get_y() as f32 + SECTOR_WIDTH,
         ),
-    }
-}
-
-impl Display for Car {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "(x: {}, y: {})\n\
-                Id: {} \n\
-                Velocity: {:?}\n\
-                Turning: {:?}\n\
-                Moving: {:?}\n\
-                Sector index: {}\n\
-                {}\n\
-                ------------------",
-            self.x,
-            self.y,
-            self.id,
-            self.vel,
-            self.turning,
-            self.moving,
-            self.index,
-            self.sector(0),
-        )
     }
 }
