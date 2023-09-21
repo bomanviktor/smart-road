@@ -17,6 +17,7 @@ pub struct State {
     pub roads: [Road; 4],
     pub grid: Grid,
     pub stats: Statistics,
+    pub paused: bool,
 }
 
 impl State {
@@ -30,10 +31,12 @@ impl State {
             ],
             grid: Grid::default(),
             stats: Statistics::default(),
+            paused: false,
         }
     }
 
     pub fn update(&mut self) {
+        let all_cars = self.get_all_cars();
         self.roads.iter_mut().for_each(|road| {
             // Clean up finished cars and add their time to stats.
             road.cleanup_cars(&mut self.stats);
@@ -44,9 +47,9 @@ impl State {
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.vel);
                     self.grid.update_grid(car.clone());
-                    // self.grid.display_intersection();
-                    // println!("{}", self.grid);
-                    car.move_car(&self.grid);
+                    //self.grid.display_intersection();
+                    //println!("{}", self.grid);
+                    car.move_car(&all_cars, &self.grid);
                 })
             });
         });
@@ -86,6 +89,17 @@ impl State {
                 }
             }
         }
+    }
+
+    fn get_all_cars(&self) -> Vec<Car> {
+        let mut cars = Vec::new();
+        for r in self.roads.iter() {
+            for car in r.cars.clone().iter().take(2).flatten() {
+                cars.push(car.clone());
+            }
+        }
+
+        cars
     }
 
     pub fn add_car_random(&mut self) {

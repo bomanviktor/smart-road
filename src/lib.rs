@@ -17,7 +17,13 @@ pub mod config {
     pub const ROAD_WIDTH: f32 = WINDOW_SIZE as f32 / 2.0;
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
 
-    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 2.0) as usize + 1;
+    pub const SPRITE_WIDTH: f32 = SECTOR_WIDTH / 4.0;
+
+    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 10.0) as usize;
+
+    pub const FPS: u64 = 60;
+
+    pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
@@ -36,6 +42,10 @@ pub mod controls {
     pub fn handle_input(state: &mut State) {
         if is_key_pressed(KeyCode::Escape) {
             std::process::exit(0);
+        }
+
+        if is_key_pressed(KeyCode::P) {
+            state.paused = !state.paused;
         }
 
         if is_key_pressed(KeyCode::Up) {

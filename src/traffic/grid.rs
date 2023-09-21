@@ -25,7 +25,7 @@ impl Grid {
     pub fn update_grid(&mut self, car: Car) {
         let x = car.get_sector().get_x();
         let y = car.get_sector().get_y();
-        self.sectors[x][y] = Some(car);
+        self.sectors[y][x] = Some(car);
         /*
         for (x, column) in self.sectors.clone().into_iter().enumerate() {
             for (y, car) in column.into_iter().enumerate() {
@@ -38,6 +38,10 @@ impl Grid {
         }
 
          */
+    }
+
+    pub fn get_car_at_coords(&self, x: usize, y: usize) -> Option<Car> {
+        self.sectors[y][x].clone()
     }
 
     pub fn get_intersection(&self) -> Intersection {
@@ -88,15 +92,10 @@ impl Grid {
         &self.empty_sectors
     }
 
-    pub fn get_car_at_coords(&self, x: usize, y: usize) -> Option<Car> {
-        println!("{:?}", self.sectors[x][y].clone());
-        self.sectors[x][y].clone()
-    }
-
     pub fn display_intersection(&self) {
-        for (i, row) in self.get_intersection().iter().enumerate() {
+        for (i, col) in self.get_intersection().iter().enumerate() {
             print!("{} ", i + 1);
-            row.iter().for_each(|car| {
+            col.iter().for_each(|car| {
                 if car.is_none() {
                     print!("[ ]");
                 } else {
