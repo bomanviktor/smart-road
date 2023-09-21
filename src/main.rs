@@ -29,7 +29,7 @@ async fn main() {
         for road in &state.roads {
             for cars in &road.cars {
                 for car in cars {
-                    render_car(car, &textures.car);
+                    render_car(car, &textures.cars);
                 }
             }
         }

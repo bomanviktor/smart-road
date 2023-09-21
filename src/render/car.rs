@@ -1,13 +1,14 @@
-use crate::traffic::{car::Car, Velocity};
+use crate::{
+    config::SECTOR_WIDTH,
+    traffic::{car::Car, Velocity},
+};
 use macroquad::prelude::*;
 
-pub fn render_car(car: &Car, texture: &Texture2D) {
+pub fn render_car(car: &Car, textures: &[Texture2D]) {
+    let texture = &textures[car.sprite_index];
     let full_width = texture.width();
-    let full_height = texture.height();
 
-    // If you want one-fourth horizontally
     let sprite_width = full_width / 4.0;
-    let sprite_height = full_height;
 
     let x_offset = match car.vel {
         Velocity::Up(_) => 0.0,
@@ -16,7 +17,7 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         Velocity::Right(_) => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, sprite_width, sprite_height);
+    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
 
     draw_texture_ex(
         texture,

@@ -26,12 +26,13 @@ pub struct Car {
     pub turning: Turning,
     pub path: Path,
     pub has_turned: bool,
+    pub sprite_index: usize,
     direction: Direction,
     time: SystemTime,
 }
 
 impl Car {
-    pub fn new(direction: Direction, turning: Turning) -> Car {
+    pub fn new(direction: Direction, turning: Turning, sprite_index: usize) -> Car {
         let path = Path::new(&direction, &turning);
         let (x, y) = get_entry_coords(&path.sectors[0]);
         Car {
@@ -48,6 +49,7 @@ impl Car {
             has_turned: false,
             direction,
             time: SystemTime::now(),
+            sprite_index,
         }
     }
 
