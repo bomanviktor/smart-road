@@ -1,8 +1,9 @@
+use macroquad::rand::gen_range;
+
 use crate::traffic::car::Car;
 use crate::traffic::grid::Grid;
 use crate::traffic::road::Road;
 use crate::traffic::statistics::*;
-use macroquad::rand::gen_range;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
