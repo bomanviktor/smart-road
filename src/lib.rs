@@ -36,8 +36,9 @@ pub mod config {
 }
 
 pub mod controls {
-    use crate::traffic::{Direction, State};
     use macroquad::prelude::*;
+
+    use crate::traffic::{Direction, State};
 
     pub fn handle_input(state: &mut State) {
         if is_key_pressed(KeyCode::Escape) {
@@ -50,56 +51,57 @@ pub mod controls {
 
         if is_key_pressed(KeyCode::Up) {
             state.add_car(Direction::South);
+            state.random = false;
         }
 
         if is_key_pressed(KeyCode::Down) {
             state.add_car(Direction::North);
+            state.random = false;
         }
 
         if is_key_pressed(KeyCode::Right) {
             state.add_car(Direction::West);
+            state.random = false;
         }
 
         if is_key_pressed(KeyCode::Left) {
             state.add_car(Direction::East);
+            state.random = false;
         }
 
         if is_key_pressed(KeyCode::R) {
-            state.add_car_random();
+            state.random = !state.random;
         }
     }
 }
 
 pub mod traffic {
-    pub mod car;
-    pub mod grid;
-    pub mod path;
-    pub mod road;
-    pub mod state;
-    pub mod statistics;
-
     pub use car::*;
     pub use grid::*;
     pub use path::*;
     pub use path::*;
     pub use state::{Direction, State};
     pub use statistics::*;
+
+    pub mod car;
+    pub mod grid;
+    pub mod path;
+    pub mod road;
+    pub mod state;
+    pub mod statistics;
 }
 
 pub mod render {
-    pub mod roads;
-
+    pub use car::render_car;
+    pub use grid::render_grid;
     pub use roads::render_textured_roads;
+    pub use textures::Textures;
+
+    pub mod roads;
 
     pub mod textures;
 
-    pub use textures::Textures;
-
     pub mod grid;
 
-    pub use grid::render_grid;
-
     pub mod car;
-
-    pub use car::render_car;
 }

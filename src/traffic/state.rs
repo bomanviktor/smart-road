@@ -1,8 +1,9 @@
+use macroquad::rand::gen_range;
+
 use crate::traffic::car::Car;
 use crate::traffic::grid::Grid;
 use crate::traffic::road::Road;
 use crate::traffic::statistics::*;
-use macroquad::rand::gen_range;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
@@ -18,6 +19,7 @@ pub struct State {
     pub grid: Grid,
     pub stats: Statistics,
     pub paused: bool,
+    pub random: bool,
 }
 
 impl State {
@@ -32,6 +34,7 @@ impl State {
             grid: Grid::default(),
             stats: Statistics::default(),
             paused: false,
+            random: false,
         }
     }
 
