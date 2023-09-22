@@ -13,7 +13,7 @@ impl Textures {
             road: macroquad::texture::load_texture("assets/asphalt/ground_asphalt_synth_08.png")
                 .await
                 .unwrap(),
-            bg: macroquad::texture::load_texture("assets/RockBG.png")
+            bg: macroquad::texture::load_texture("assets/intersection.png")
                 .await
                 .unwrap(),
             car: macroquad::texture::load_texture("assets/cars/Car_Sprite_Sheet_Resized.png")
