@@ -1,11 +1,21 @@
+use macroquad::prelude::*;
+
+use crate::traffic::Model;
 use crate::{
     config::SECTOR_WIDTH,
     traffic::{car::Car, Velocity},
 };
-use macroquad::prelude::*;
 
 pub fn render_car(car: &Car, textures: &[Texture2D]) {
-    let texture = &textures[car.sprite_index];
+    let texture = match car.model {
+        Model::Standard => &textures[0],
+        Model::Audi => &textures[1],
+        Model::Truck => &textures[2],
+        Model::Van => &textures[3],
+        Model::Taxi => &textures[4],
+        Model::Viper => &textures[5],
+    };
+
     let full_width = texture.width();
 
     let sprite_width = full_width / 4.0;

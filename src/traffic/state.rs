@@ -1,8 +1,9 @@
+use macroquad::rand::gen_range;
+
 use crate::traffic::car::Car;
 use crate::traffic::grid::Grid;
 use crate::traffic::road::Road;
 use crate::traffic::statistics::*;
-use macroquad::rand::gen_range;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
@@ -56,34 +57,33 @@ impl State {
     }
 
     pub fn add_car(&mut self, direction: Direction) {
-        let sprite_index = gen_range(0, 6);
         match direction {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[0].add_car(Car::new(direction, path, sprite_index));
+                    self.roads[0].add_car(Car::new(direction, path));
                 }
             }
             Direction::East => {
                 let available_path = self.roads[1].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[1].add_car(Car::new(direction, path, sprite_index));
+                    self.roads[1].add_car(Car::new(direction, path));
                 }
             }
             Direction::South => {
                 let available_path = self.roads[2].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[2].add_car(Car::new(direction, path, sprite_index));
+                    self.roads[2].add_car(Car::new(direction, path));
                 }
             }
             Direction::West => {
                 let available_path = self.roads[3].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[3].add_car(Car::new(direction, path, sprite_index));
+                    self.roads[3].add_car(Car::new(direction, path));
                 }
             }
         }
