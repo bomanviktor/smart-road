@@ -1,6 +1,7 @@
+use std::fmt::{Display, Formatter};
+
 use crate::traffic::car::Turning;
 use crate::traffic::{Direction, Moving};
-use std::fmt::{Display, Formatter};
 
 /*
 pub enum SectorStatus {
@@ -99,9 +100,9 @@ fn left_turn(direction: &Direction) -> Vec<Sector> {
             Sector::new(11, 6, Moving::Right), // Exit
         ]),
         Direction::East => get_path(vec![
-            Sector::new(11, 5, Moving::Right), // Entry
-            Sector::new(5, 5, Moving::Up),     // Turning-point
-            Sector::new(5, 11, Moving::Up),    // Exit
+            Sector::new(11, 5, Moving::Left), // Entry
+            Sector::new(5, 5, Moving::Down),  // Turning-point
+            Sector::new(5, 11, Moving::Down), // Exit
         ]),
         Direction::South => get_path(vec![
             Sector::new(6, 11, Moving::Up),  // Entry
@@ -110,8 +111,8 @@ fn left_turn(direction: &Direction) -> Vec<Sector> {
         ]),
         Direction::West => get_path(vec![
             Sector::new(0, 6, Moving::Right), // Entry
-            Sector::new(6, 6, Moving::Down),  // Turning-point
-            Sector::new(6, 0, Moving::Down),  // Exit
+            Sector::new(6, 6, Moving::Up),    // Turning-point
+            Sector::new(6, 0, Moving::Up),    // Exit
         ]),
     }
 }
@@ -124,19 +125,19 @@ fn go_straight(direction: &Direction) -> Vec<Sector> {
             Sector::new(4, 11, Moving::Down), // Exit
         ]),
         Direction::East => get_path(vec![
-            Sector::new(11, 4, Moving::Right), // Entry
-            Sector::new(5, 4, Moving::Right),  // Mid-point
-            Sector::new(0, 4, Moving::Right),  // Exit
+            Sector::new(11, 4, Moving::Left), // Entry
+            Sector::new(5, 4, Moving::Left),  // Mid-point
+            Sector::new(0, 4, Moving::Left),  // Exit
         ]),
         Direction::South => get_path(vec![
-            Sector::new(7, 11, Moving::Down), // Entry
-            Sector::new(7, 5, Moving::Down),  // Mid-point
-            Sector::new(7, 0, Moving::Down),  // Exit
+            Sector::new(7, 11, Moving::Up), // Entry
+            Sector::new(7, 5, Moving::Up),  // Mid-point
+            Sector::new(7, 0, Moving::Up),  // Exit
         ]),
         Direction::West => get_path(vec![
-            Sector::new(0, 7, Moving::Left),  // Entry
-            Sector::new(5, 7, Moving::Left),  // Mid-point
-            Sector::new(11, 7, Moving::Left), // Exit
+            Sector::new(0, 7, Moving::Right),  // Entry
+            Sector::new(5, 7, Moving::Right),  // Mid-point
+            Sector::new(11, 7, Moving::Right), // Exit
         ]),
     }
 }
@@ -159,9 +160,9 @@ fn right_turn(direction: &Direction) -> Vec<Sector> {
             Sector::new(11, 8, Moving::Right), // Exit
         ]),
         Direction::West => get_path(vec![
-            Sector::new(0, 8, Moving::Left), // Entry
-            Sector::new(3, 8, Moving::Up),   // Turning point
-            Sector::new(3, 11, Moving::Up),  // Exit
+            Sector::new(0, 8, Moving::Right), // Entry
+            Sector::new(3, 8, Moving::Up),    // Turning point
+            Sector::new(3, 11, Moving::Up),   // Exit
         ]),
     }
 }
@@ -184,6 +185,7 @@ fn get_path(sectors: Vec<Sector>) -> Vec<Sector> {
         if y > sectors[1].y {
             y -= 1;
         }
+
         path.push(Sector::new(x, y, sectors[0].clone().moving));
     }
     while x != sectors[2].x || y != sectors[2].y {

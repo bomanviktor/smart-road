@@ -1,7 +1,8 @@
+use std::fmt::{Display, Formatter};
+
 use crate::traffic::car::Car;
 use crate::traffic::path::Sector;
 use crate::traffic::Moving;
-use std::fmt::{Display, Formatter};
 
 type Sectors = [[Option<Car>; 12]; 12];
 type Intersection = [Vec<Option<Car>>; 6];
@@ -25,7 +26,7 @@ impl Grid {
     pub fn update_grid(&mut self, car: Car) {
         let x = car.get_sector().get_x();
         let y = car.get_sector().get_y();
-        self.sectors[y][x] = Some(car);
+        self.sectors[x][y] = Some(car);
         /*
         for (x, column) in self.sectors.clone().into_iter().enumerate() {
             for (y, car) in column.into_iter().enumerate() {
@@ -41,7 +42,7 @@ impl Grid {
     }
 
     pub fn get_car_at_coords(&self, x: usize, y: usize) -> Option<Car> {
-        self.sectors[y][x].clone()
+        self.sectors[x][y].clone()
     }
 
     pub fn get_intersection(&self) -> Intersection {
