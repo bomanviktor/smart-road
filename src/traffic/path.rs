@@ -10,11 +10,17 @@ pub enum SectorStatus {
 }
 */
 
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Eq, Clone, Debug)]
 pub struct Sector {
     x: usize,
     y: usize,
     pub moving: Moving, //    status: SectorStatus
+}
+
+impl PartialEq for Sector {
+    fn eq(&self, other: &Self) -> bool {
+        self.y == other.y && self.x == other.y && self.moving != other.moving
+    }
 }
 
 impl Sector {

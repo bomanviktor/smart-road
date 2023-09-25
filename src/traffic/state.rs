@@ -98,7 +98,9 @@ impl State {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
-                cars.push(car.clone());
+                if car.path.current > 2 {
+                    cars.push(car.clone());
+                }
             }
         }
 

@@ -96,6 +96,10 @@ impl Car {
             return;
         }
 
+        if self.turning == Turning::Straight {
+            self.straight_check(grid);
+        }
+
         // 1. Stop car if other car in same sector
         // 2. Emergency brake if car is in one sector ahead or moving towards the sector
         // 3. Brake gently if car is in two sectors ahead or car moving towards the sector
@@ -122,20 +126,123 @@ impl Car {
     }
 
     fn brake(&mut self) {
+        println!("brake");
         self.vel *= 0.8;
     }
 
     fn emergency_brake(&mut self) {
+        println!("emergency");
         self.vel *= 0.4;
     }
 
     fn stop(&mut self) {
+        println!("stop");
         self.vel = 0.0;
         match self.moving {
             Moving::Up => self.y += self.sector_position(),
             Moving::Right => self.x -= self.sector_position(),
             Moving::Down => self.y -= self.sector_position(),
             Moving::Left => self.x += self.sector_position(),
+        }
+    }
+
+    fn straight_check(&mut self, grid: &Grid) {
+        if self.path.current == 4 {
+            match self.moving {
+                Moving::Right => {
+                    if let Some(car) = grid.get_car_at_coords(4, 6) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Left => {
+                    if let Some(car) = grid.get_car_at_coords(8, 5) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Up => {
+                    if let Some(car) = grid.get_car_at_coords(6, 7) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Down => {
+                    if let Some(car) = grid.get_car_at_coords(5, 4) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+            }
+        }
+
+        if self.path.current == 5 {
+            match self.moving {
+                Moving::Right => {
+                    if let Some(car) = grid.get_car_at_coords(6, 8) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Left => {
+                    if let Some(car) = grid.get_car_at_coords(5, 3) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Up => {
+                    if let Some(car) = grid.get_car_at_coords(8, 5) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Down => {
+                    if let Some(car) = grid.get_car_at_coords(3, 6) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+            }
+        }
+        if self.path.current == 6 {
+            match self.moving {
+                Moving::Right => {
+                    if let Some(car) = grid.get_car_at_coords(7, 8) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Left => {
+                    if let Some(car) = grid.get_car_at_coords(4, 3) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Up => {
+                    if let Some(car) = grid.get_car_at_coords(8, 4) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+                Moving::Down => {
+                    if let Some(car) = grid.get_car_at_coords(3, 7) {
+                        if self.sector_position() < car.sector_position() {
+                            self.brake();
+                        }
+                    }
+                }
+            }
         }
     }
 
