@@ -27,7 +27,9 @@ async fn main() {
         clear_background(BLACK);
         handle_input(&mut state);
         render_textured_roads(&textures);
-        render_grid();
+        if state.display_grid {
+            render_grid();
+        }
 
         if !state.paused {
             if state.random && random_timer.elapsed() > random_interval {

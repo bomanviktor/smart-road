@@ -20,6 +20,7 @@ pub struct State {
     pub stats: Statistics,
     pub paused: bool,
     pub random: bool,
+    pub display_grid: bool
 }
 
 impl State {
@@ -35,6 +36,7 @@ impl State {
             stats: Statistics::default(),
             paused: false,
             random: false,
+            display_grid: false,
         }
     }
 
@@ -51,7 +53,7 @@ impl State {
                     self.stats.set_velocity(car.vel);
                     car.move_car(&all_cars, &self.grid);
                     self.grid.update_grid(car.clone());
-                    //self.grid.display_intersection();
+                    // self.grid.display_intersection();
                     //println!("{}", self.grid);
                 })
             });
@@ -98,7 +100,7 @@ impl State {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
-                if car.path.current > 2 {
+                if car.path.current > 2 && car.path.current < 9 {
                     cars.push(car.clone());
                 }
             }

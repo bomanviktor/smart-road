@@ -65,10 +65,6 @@ impl Car {
     /// Moves the car both in `Path` but also in `Car.x` and `Car.y`.
     /// Uses
     pub fn move_car(&mut self, all_cars: &[Car], grid: &Grid) {
-        if !self.has_turned {
-            self.update_direction();
-        };
-
         match self.moving {
             Moving::Up => self.y -= self.vel * MAX_VELOCITY,
             Moving::Right => self.x += self.vel * MAX_VELOCITY,
@@ -77,17 +73,22 @@ impl Car {
         }
 
         self.move_in_path();
+
+        if !self.has_turned {
+            self.update_direction();
+        };
+
         if self.turning == Turning::Right {
             self.accelerate();
             return;
         }
 
-        if self.path.current > 7 && self.turning == Turning::Straight {
+        if self.path.current > 8 && self.turning == Turning::Straight {
             self.accelerate();
             return;
         }
 
-        if self.path.current > 8 && self.turning == Turning::Left {
+        if self.path.current > 9 && self.turning == Turning::Left {
             self.accelerate();
             return;
         }
@@ -96,26 +97,37 @@ impl Car {
             return;
         }
 
-        if self.turning == Turning::Straight {
-            self.straight_check(grid);
+        if self.sector_position() > SECTOR_WIDTH / 2.0 && !self.adjacent_sectors(grid, 1) {
+            self.accelerate();
         }
 
         // 1. Stop car if other car in same sector
         // 2. Emergency brake if car is in one sector ahead or moving towards the sector
         // 3. Brake gently if car is in two sectors ahead or car moving towards the sector
-        if self.scan_sector(all_cars) {
-            self.stop();
-        } else if self.adjacent_sectors(grid, 1) || self.scan_in_front(all_cars) {
-            self.emergency_brake();
-        } else if self.adjacent_sectors(grid, 2) {
+        if self.adjacent_sectors(grid, 2) {
+            println!("+2 brake");
             self.brake();
+            return;
+        }
+
+        if self.adjacent_sectors(grid, 1) {
+            println!("+1 brake");
+            if self.sector_position() > SECTOR_WIDTH / 2.0 {
+                self.emergency_brake();
+            } else {
+                self.brake();
+            }
+            return;
+        }
+
+        if self.scan_in_front(all_cars) {
+            println!("scan");
+            self.emergency_brake();
         }
 
         // If car is in a deadlock with another car in the same sector then
         // send car who made it further into the sector.
-        if !self.scan_sector(all_cars) && !self.adjacent_sectors(grid, 1) {
-            self.accelerate();
-        }
+        self.accelerate();
     }
 
     fn accelerate(&mut self) {
@@ -126,17 +138,15 @@ impl Car {
     }
 
     fn brake(&mut self) {
-        println!("brake");
-        self.vel *= 0.8;
+        self.vel *= 0.7;
     }
 
     fn emergency_brake(&mut self) {
-        println!("emergency");
         self.vel *= 0.4;
     }
 
+    /*
     fn stop(&mut self) {
-        println!("stop");
         self.vel = 0.0;
         match self.moving {
             Moving::Up => self.y += self.sector_position(),
@@ -146,110 +156,11 @@ impl Car {
         }
     }
 
-    fn straight_check(&mut self, grid: &Grid) {
-        if self.path.current == 4 {
-            match self.moving {
-                Moving::Right => {
-                    if let Some(car) = grid.get_car_at_coords(4, 6) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Left => {
-                    if let Some(car) = grid.get_car_at_coords(8, 5) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Up => {
-                    if let Some(car) = grid.get_car_at_coords(6, 7) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Down => {
-                    if let Some(car) = grid.get_car_at_coords(5, 4) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-            }
-        }
-
-        if self.path.current == 5 {
-            match self.moving {
-                Moving::Right => {
-                    if let Some(car) = grid.get_car_at_coords(6, 8) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Left => {
-                    if let Some(car) = grid.get_car_at_coords(5, 3) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Up => {
-                    if let Some(car) = grid.get_car_at_coords(8, 5) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Down => {
-                    if let Some(car) = grid.get_car_at_coords(3, 6) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-            }
-        }
-        if self.path.current == 6 {
-            match self.moving {
-                Moving::Right => {
-                    if let Some(car) = grid.get_car_at_coords(7, 8) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Left => {
-                    if let Some(car) = grid.get_car_at_coords(4, 3) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Up => {
-                    if let Some(car) = grid.get_car_at_coords(8, 4) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-                Moving::Down => {
-                    if let Some(car) = grid.get_car_at_coords(3, 7) {
-                        if self.sector_position() < car.sector_position() {
-                            self.brake();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
+     */
     /// ### scan_in_front
     /// Scans the sector in front of car.
     /// Uses 5 px margin to avoid scanning unwanted cars.
-    fn scan_in_front(&self, cars: &[Car]) -> bool {
+    fn scan_in_front(&mut self, cars: &[Car]) -> bool {
         let top = self.get_borders().top as usize;
         let right = self.get_borders().right as usize;
         let bottom = self.get_borders().bottom as usize;
@@ -304,7 +215,7 @@ impl Car {
                 }
                 Moving::Left => {
                     for x in (left - SCAN_AREA)..left {
-                        for y in top + 15..bottom - 15 {
+                        for y in top - 20..bottom + 20 {
                             if (other_top..other_bottom).contains(&y)
                                 && (other_left..other_right).contains(&x)
                             {
@@ -320,20 +231,18 @@ impl Car {
 
     /// ### scan_sector
     /// Scans the current sector and checks if another car is inside the sector.
-    fn scan_sector(&self, cars: &[Car]) -> bool {
-        for car in cars.iter().filter(|&c| {
-            let sec1 = c.get_sector();
-            let sec2 = self.get_sector();
-            sec1.get_x() == sec2.get_x()
-                && sec1.get_y() == sec2.get_y()
-                && sec1.moving != sec2.moving
-        }) {
-            if self.sector_position() < car.sector_position() {
-                return true;
+    /* fn scan_sector(&self, cars: &[Car]) -> bool {
+            for car in cars.iter().filter(|&c| {
+                self.get_sector() == c.get_sector()
+
+            }) {
+                if self.sector_position() < car.sector_position() {
+                    return true;
+                }
             }
+            false
         }
-        false
-    }
+    */
 
     /// ### adjacent_sectors
     /// Check for cars in chosen amount of sectors ahead. Also check adjacent sectors.
@@ -355,22 +264,25 @@ impl Car {
             Moving::Up | Moving::Down => {
                 if let Some(car) = grid.get_car_at_coords(x - sectors_ahead, y) {
                     if car.moving == Moving::Right && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position();
+                        return self.sector_position() < car.sector_position()
+                            || self.vel < car.vel;
                     }
-                }
-                if grid.get_car_at_coords(x, y).is_some() {
-                    return true;
-                }
-                if let Some(car) = grid.get_car_at_coords(x + sectors_ahead, y) {
-                    if car.moving == Moving::Left && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position();
+                    if grid.get_car_at_coords(x, y).is_some() {
+                        return true;
+                    }
+                    if let Some(car) = grid.get_car_at_coords(x + sectors_ahead, y) {
+                        if car.moving == Moving::Left && car.turning != Turning::Right {
+                            return self.sector_position() < car.sector_position()
+                                || self.vel < car.vel;
+                        }
                     }
                 }
             }
             Moving::Right | Moving::Left => {
                 if let Some(car) = grid.get_car_at_coords(x, y - sectors_ahead) {
                     if car.moving == Moving::Down && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position();
+                        return self.sector_position() < car.sector_position()
+                            || self.vel < car.vel;
                     }
                 }
                 if grid.get_car_at_coords(x, y).is_some() {
@@ -378,7 +290,8 @@ impl Car {
                 }
                 if let Some(car) = grid.get_car_at_coords(x, y + sectors_ahead) {
                     if car.moving == Moving::Up && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position();
+                        return self.sector_position() < car.sector_position()
+                            || self.vel < car.vel;
                     }
                 }
             }
@@ -416,9 +329,10 @@ impl Car {
 
     /// ### move_in_path
     /// Moves the car inside its own `Path` by incrementing `path.current`.
+    ///
     fn move_in_path(&mut self) {
         let next_index = self.path.current + 1;
-        if next_index >= self.path.sectors.len() {
+        if next_index > self.path.sectors.len() - 2 {
             return;
         }
 
@@ -455,12 +369,12 @@ impl Car {
     /// ### update_direction
     /// Updates the direction of the car based on current sector in `Path`
     pub fn update_direction(&mut self) {
-        if self.has_turned {
-            return;
-        }
-
         let next_index = self.path.current + 1;
         let next = &self.path.sectors[next_index];
+
+        if next_index > self.path.sectors.len() - 3 {
+            return;
+        }
 
         match self.direction {
             Direction::North => {

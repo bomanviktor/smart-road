@@ -2,7 +2,6 @@ use macroquad::prelude::*;
 
 #[derive(PartialEq, Clone)]
 pub struct Textures {
-    pub road: Texture2D,
     pub bg: Texture2D,
     pub car: Texture2D,
 }
@@ -10,13 +9,8 @@ pub struct Textures {
 impl Textures {
     pub async fn load() -> Self {
         Self {
-            road: macroquad::texture::load_texture("assets/asphalt/ground_asphalt_synth_08.png")
-                .await
-                .unwrap(),
-            bg: macroquad::texture::load_texture("assets/intersection.png")
-                .await
-                .unwrap(),
-            car: macroquad::texture::load_texture("assets/cars/Car_Sprite_Sheet_Resized.png")
+            bg: load_texture("assets/intersection.png").await.unwrap(),
+            car: load_texture("assets/cars/Car_Sprite_Sheet_Resized.png")
                 .await
                 .unwrap(),
         }

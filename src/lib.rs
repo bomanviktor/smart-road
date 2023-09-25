@@ -24,6 +24,15 @@ pub mod config {
     pub const FPS: u64 = 60;
 
     pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
+
+    pub const FULL_THROTTLE: f32 = 2.0;
+
+    pub const CRUISE: f32 = 1.0;
+
+    pub const BRAKE: f32 = 0.5;
+
+    pub const EMERGENCY_BRAKE: f32 = 0.2;
+    pub const STOP: f32 = 0.0;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
@@ -67,6 +76,10 @@ pub mod controls {
         if is_key_pressed(KeyCode::Left) {
             state.add_car(Direction::East);
             state.random = false;
+        }
+
+        if is_key_pressed(KeyCode::G) {
+            state.display_grid = !state.display_grid;
         }
 
         if is_key_pressed(KeyCode::R) {

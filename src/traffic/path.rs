@@ -48,7 +48,7 @@ pub struct Path {
 impl Path {
     pub fn new(direction: &Direction, turning: &Turning) -> Path {
         Path {
-            current: 0,
+            current: 1,
             sectors: match turning {
                 Turning::Left => left_turn(direction),
                 Turning::Straight => go_straight(direction),

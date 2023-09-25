@@ -13,7 +13,7 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         Moving::Right => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
+    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH * 0.8, SECTOR_WIDTH * 0.8);
 
     draw_texture_ex(
         texture,

@@ -26,7 +26,13 @@ impl Grid {
     pub fn update_grid(&mut self, car: Car) {
         let x = car.get_sector().get_x();
         let y = car.get_sector().get_y();
-        self.sectors[x][y] = Some(car);
+        match car.moving {
+            Moving::Up => self.sectors[x][y - 1] = Some(car),
+            Moving::Right => self.sectors[x + 1][y] = Some(car),
+            Moving::Down => self.sectors[x][y + 1] = Some(car),
+            Moving::Left => self.sectors[x - 1][y] = Some(car),
+        }
+
         /*
         for (x, column) in self.sectors.clone().into_iter().enumerate() {
             for (y, car) in column.into_iter().enumerate() {
@@ -57,33 +63,6 @@ impl Grid {
             intersection[i] = row;
         }
         intersection
-    }
-
-    pub fn get_cars_ahead(&self, car: &Car) -> [Option<Car>; 3] {
-        let x = car.get_sector().get_x();
-        let y = car.get_sector().get_y();
-        match car.moving {
-            Moving::Up => [
-                self.get_car_at_coords(x - 1, y - 1),
-                self.get_car_at_coords(x, y - 1),
-                self.get_car_at_coords(x + 1, y - 1),
-            ],
-            Moving::Right => [
-                self.get_car_at_coords(x + 1, y - 1),
-                self.get_car_at_coords(x + 1, y),
-                self.get_car_at_coords(x + 1, y + 1),
-            ],
-            Moving::Down => [
-                self.get_car_at_coords(x - 1, y + 1),
-                self.get_car_at_coords(x, y + 1),
-                self.get_car_at_coords(x + 1, y + 1),
-            ],
-            Moving::Left => [
-                self.get_car_at_coords(x - 1, y - 1),
-                self.get_car_at_coords(x - 1, y),
-                self.get_car_at_coords(x - 1, y + 1),
-            ],
-        }
     }
 
     pub fn get_occupied(&self) -> &Vec<Sector> {
