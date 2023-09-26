@@ -19,7 +19,7 @@ pub mod config {
 
     pub const SPRITE_WIDTH: f32 = SECTOR_WIDTH / 4.0;
 
-    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 1.5) as usize;
+    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 2.0) as usize;
 
     pub const FPS: u64 = 60;
 
@@ -82,6 +82,11 @@ pub mod controls {
             state.display_grid = !state.display_grid;
         }
 
+        if is_key_pressed(KeyCode::S) {
+            println!("{:.?}", state);
+            println!("---------------------------------");
+        }
+
         if is_key_pressed(KeyCode::R) {
             state.random = !state.random;
         }
@@ -90,6 +95,7 @@ pub mod controls {
 
 pub mod traffic {
     pub use car::*;
+    pub use collision::*;
     pub use grid::*;
     pub use path::*;
     pub use path::*;
@@ -102,6 +108,8 @@ pub mod traffic {
     pub mod road;
     pub mod state;
     pub mod statistics;
+
+    pub mod collision;
 }
 
 pub mod render {

@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
-use crate::config::{MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE};
+use crate::config::{MAX_VELOCITY, SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Grid, Statistics};
 
@@ -20,10 +20,10 @@ pub enum Moving {
 }
 #[derive(Debug, Clone, PartialEq)]
 pub struct Borders {
-    top: f32,
-    right: f32,
-    left: f32,
-    bottom: f32,
+    pub(crate) top: f32,
+    pub(crate) right: f32,
+    pub(crate) left: f32,
+    pub(crate) bottom: f32,
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -34,13 +34,13 @@ pub struct Car {
     pub vel: f32,
     pub turning: Turning,
     pub path: Path,
-    pub has_turned: bool,
-    direction: Direction,
+    pub(crate) direction: Direction,
+    pub id: usize,
     time: SystemTime,
 }
 
 impl Car {
-    pub fn new(direction: Direction, turning: Turning) -> Car {
+    pub fn new(direction: Direction, turning: Turning, id: usize) -> Car {
         let path = Path::new(&direction, &turning);
         let (x, y) = get_entry_coords(&path.sectors[0]);
         Car {
@@ -53,9 +53,9 @@ impl Car {
                 Direction::West => Moving::Right,
             },
             vel: 1.0,
+            id,
             turning,
             path,
-            has_turned: false,
             direction,
             time: SystemTime::now(),
         }
@@ -64,7 +64,12 @@ impl Car {
     /// ### move_car
     /// Moves the car both in `Path` but also in `Car.x` and `Car.y`.
     /// Uses
-    pub fn move_car(&mut self, all_cars: &[Car], grid: &Grid) {
+    pub fn move_car(&mut self, _all_cars: &[Car], grid: &Grid) {
+        if self.turning != Turning::Right {
+            // println!("{self}");
+        }
+        self.move_in_path();
+        self.moving = self.get_sector().moving;
         match self.moving {
             Moving::Up => self.y -= self.vel * MAX_VELOCITY,
             Moving::Right => self.x += self.vel * MAX_VELOCITY,
@@ -72,23 +77,17 @@ impl Car {
             Moving::Left => self.x -= self.vel * MAX_VELOCITY,
         }
 
-        self.move_in_path();
-
-        if !self.has_turned {
-            self.update_direction();
-        };
-
         if self.turning == Turning::Right {
             self.accelerate();
             return;
         }
 
-        if self.path.current > 8 && self.turning == Turning::Straight {
+        if self.turning == Turning::Straight && self.path.current >= 8 {
             self.accelerate();
             return;
         }
 
-        if self.path.current > 9 && self.turning == Turning::Left {
+        if self.turning == Turning::Left && self.path.current >= 9 {
             self.accelerate();
             return;
         }
@@ -97,55 +96,65 @@ impl Car {
             return;
         }
 
-        if self.sector_position() > SECTOR_WIDTH / 2.0 && !self.adjacent_sectors(grid, 1) {
-            self.accelerate();
-        }
-
         // 1. Stop car if other car in same sector
         // 2. Emergency brake if car is in one sector ahead or moving towards the sector
         // 3. Brake gently if car is in two sectors ahead or car moving towards the sector
-        if self.adjacent_sectors(grid, 2) {
-            println!("+2 brake");
-            self.brake();
-            return;
-        }
-
         if self.adjacent_sectors(grid, 1) {
-            println!("+1 brake");
-            if self.sector_position() > SECTOR_WIDTH / 2.0 {
-                self.emergency_brake();
-            } else {
-                self.brake();
-            }
-            return;
+            self.brake();
+        } else {
+            self.accelerate();
         }
-
-        if self.scan_in_front(all_cars) {
-            println!("scan");
-            self.emergency_brake();
-        }
-
-        // If car is in a deadlock with another car in the same sector then
-        // send car who made it further into the sector.
-        self.accelerate();
     }
 
     fn accelerate(&mut self) {
-        let new_vel = (2.0 - self.vel) / 20.0;
+        let new_vel = (2.0 - self.vel) / 30.0;
         if self.vel < 2.0 {
             self.vel += new_vel;
         }
     }
 
-    fn brake(&mut self) {
-        self.vel *= 0.7;
+    pub fn slow_down(&mut self) {
+        self.vel *= 0.9;
     }
 
-    fn emergency_brake(&mut self) {
-        self.vel *= 0.4;
+    pub fn brake(&mut self) {
+        if self.sector_position() > SECTOR_WIDTH / 1.5 {
+            self.vel *= 0.4
+        } else {
+            self.vel *= 0.7;
+        }
     }
-
     /*
+    fn emergency_brake(&mut self) {
+        if self.sector_position() > SECTOR_WIDTH / 2.0 {
+            self.vel *= 0.3
+        } else {
+            self.vel *= 0.6;
+        }
+    }
+
+    fn scan_all_cars(&mut self, cars: &[Car]) {
+        let next_index = self.path.current + 1;
+        let sector_one = &self.path.sectors[next_index];
+        let sector_two = &self.path.sectors[next_index + 1];
+
+        for car in cars {
+            let other_next_index = car.path.current + 1;
+            let other_one = &car.path.sectors[other_next_index];
+            let other_two = &car.path.sectors[other_next_index + 1];
+
+            if other_one == sector_one {
+                self.emergency_brake();
+                return;
+            }
+
+            if other_two == sector_two {
+                self.brake();
+                return;
+            }
+        }
+    }
+
     fn stop(&mut self) {
         self.vel = 0.0;
         match self.moving {
@@ -157,147 +166,6 @@ impl Car {
     }
 
      */
-    /// ### scan_in_front
-    /// Scans the sector in front of car.
-    /// Uses 5 px margin to avoid scanning unwanted cars.
-    fn scan_in_front(&mut self, cars: &[Car]) -> bool {
-        let top = self.get_borders().top as usize;
-        let right = self.get_borders().right as usize;
-        let bottom = self.get_borders().bottom as usize;
-        let left = self.get_borders().left as usize;
-
-        for car in cars {
-            if self.moving == car.moving
-                || self.direction == car.direction
-                || car.turning == Turning::Right
-            {
-                continue;
-            }
-
-            let other_top = car.get_borders().top as usize;
-            let other_right = car.get_borders().right as usize;
-            let other_bottom = car.get_borders().bottom as usize;
-            let other_left = car.get_borders().left as usize;
-
-            match self.moving {
-                Moving::Up => {
-                    for x in left + 20..right - 20 {
-                        for y in (top - SCAN_AREA)..top {
-                            if (other_bottom..other_top).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                Moving::Right => {
-                    for x in right..(right + SCAN_AREA) {
-                        for y in top + 20..bottom - 20 {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                Moving::Down => {
-                    for x in left + 20..right - 20 {
-                        for y in bottom..(bottom + SCAN_AREA) {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                Moving::Left => {
-                    for x in (left - SCAN_AREA)..left {
-                        for y in top - 20..bottom + 20 {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        false
-    }
-
-    /// ### scan_sector
-    /// Scans the current sector and checks if another car is inside the sector.
-    /* fn scan_sector(&self, cars: &[Car]) -> bool {
-            for car in cars.iter().filter(|&c| {
-                self.get_sector() == c.get_sector()
-
-            }) {
-                if self.sector_position() < car.sector_position() {
-                    return true;
-                }
-            }
-            false
-        }
-    */
-
-    /// ### adjacent_sectors
-    /// Check for cars in chosen amount of sectors ahead. Also check adjacent sectors.
-    /// This **takes into consideration** the direction the car will have in that sector.
-    ///
-    ///  **Calculation goes as follows:**
-    /// - Up:    x-n..n, y-n
-    /// - Right: x+n, y-n..n
-    /// - Down:  x-n..n, y+n
-    /// - Left:  x-n, y-n..n
-    ///
-    /// With n being `sectors_ahead`
-    fn adjacent_sectors(&mut self, grid: &Grid, sectors_ahead: usize) -> bool {
-        let i = self.path.current;
-        let sector_ahead = &self.path.sectors[i + sectors_ahead];
-        let x = sector_ahead.get_x();
-        let y = sector_ahead.get_y();
-        match sector_ahead.moving {
-            Moving::Up | Moving::Down => {
-                if let Some(car) = grid.get_car_at_coords(x - sectors_ahead, y) {
-                    if car.moving == Moving::Right && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position()
-                            || self.vel < car.vel;
-                    }
-                    if grid.get_car_at_coords(x, y).is_some() {
-                        return true;
-                    }
-                    if let Some(car) = grid.get_car_at_coords(x + sectors_ahead, y) {
-                        if car.moving == Moving::Left && car.turning != Turning::Right {
-                            return self.sector_position() < car.sector_position()
-                                || self.vel < car.vel;
-                        }
-                    }
-                }
-            }
-            Moving::Right | Moving::Left => {
-                if let Some(car) = grid.get_car_at_coords(x, y - sectors_ahead) {
-                    if car.moving == Moving::Down && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position()
-                            || self.vel < car.vel;
-                    }
-                }
-                if grid.get_car_at_coords(x, y).is_some() {
-                    return true;
-                }
-                if let Some(car) = grid.get_car_at_coords(x, y + sectors_ahead) {
-                    if car.moving == Moving::Up && car.turning != Turning::Right {
-                        return self.sector_position() < car.sector_position()
-                            || self.vel < car.vel;
-                    }
-                }
-            }
-        }
-        false
-    }
 
     /// ### get_sector
     /// Get the current sector of a `Car`.
@@ -318,7 +186,7 @@ impl Car {
 
     /// ### sector_position
     /// Get the distance travelled into a `Sector`. This is used to break deadlocks.
-    fn sector_position(&self) -> f32 {
+    pub(crate) fn sector_position(&self) -> f32 {
         match self.moving {
             Moving::Up => self.get_sector().get_y() as f32 * SECTOR_WIDTH - self.y,
             Moving::Right => self.x - self.get_sector().get_x() as f32 * SECTOR_WIDTH,
@@ -331,13 +199,10 @@ impl Car {
     /// Moves the car inside its own `Path` by incrementing `path.current`.
     ///
     fn move_in_path(&mut self) {
-        let next_index = self.path.current + 1;
-        if next_index > self.path.sectors.len() - 2 {
+        if self.path.current + 2 >= self.path.sectors.len() {
             return;
         }
-
-        let next = &self.path.sectors[next_index];
-
+        let next = &self.get_sector();
         match self.moving {
             Moving::Up => {
                 if self.update_up(next) {
@@ -372,59 +237,26 @@ impl Car {
         let next_index = self.path.current + 1;
         let next = &self.path.sectors[next_index];
 
+        let sector = self.get_sector();
         if next_index > self.path.sectors.len() - 3 {
             return;
         }
+        if next.get_x() < sector.get_x() && next.get_y() == sector.get_y() {
+            self.moving = Moving::Left;
+            return;
+        }
 
-        match self.direction {
-            Direction::North => {
-                if self.update_down(next) && self.update_left(next) {
-                    self.moving = Moving::Right;
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_down(next) && self.update_right(next) {
-                    self.moving = Moving::Left;
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::East => {
-                if self.update_left(next) && self.update_up(next) {
-                    self.moving = Moving::Down;
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_left(next) && self.update_down(next) {
-                    self.moving = Moving::Up;
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::South => {
-                if self.update_up(next) && self.update_left(next) {
-                    self.moving = Moving::Right;
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_up(next) && self.update_right(next) {
-                    self.moving = Moving::Left;
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::West => {
-                if self.update_right(next) && self.update_up(next) {
-                    self.moving = Moving::Down;
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_right(next) && self.update_down(next) {
-                    self.moving = Moving::Up;
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
+        if next.get_x() > sector.get_x() && next.get_y() == sector.get_y() {
+            self.moving = Moving::Right;
+            return;
+        }
+        if next.get_x() == sector.get_x() && next.get_y() < sector.get_y() {
+            self.moving = Moving::Up;
+            return;
+        }
+
+        if next.get_x() == sector.get_x() && next.get_y() > sector.get_y() {
+            self.moving = Moving::Down;
         }
     }
 
@@ -474,6 +306,7 @@ impl Display for Car {
         write!(
             f,
             "(x: {}, y: {})\n\
+                Id: {} \n\
                 Velocity: {:?}\n\
                 Turning: {:?}\n\
                 Sector index: {}\n\
@@ -481,6 +314,7 @@ impl Display for Car {
                 ------------------",
             self.x,
             self.y,
+            self.id,
             self.vel,
             self.turning,
             self.path.current,

@@ -20,7 +20,8 @@ pub struct State {
     pub stats: Statistics,
     pub paused: bool,
     pub random: bool,
-    pub display_grid: bool
+    pub display_grid: bool,
+    total_cars: usize,
 }
 
 impl State {
@@ -37,11 +38,13 @@ impl State {
             paused: false,
             random: false,
             display_grid: false,
+            total_cars: 1,
         }
     }
 
     pub fn update(&mut self) {
         let all_cars = self.get_all_cars();
+
         self.roads.iter_mut().for_each(|road| {
             // Clean up finished cars and add their time to stats.
             road.cleanup_cars(&mut self.stats);
@@ -54,7 +57,7 @@ impl State {
                     car.move_car(&all_cars, &self.grid);
                     self.grid.update_grid(car.clone());
                     // self.grid.display_intersection();
-                    //println!("{}", self.grid);
+                    println!("{}", self.grid);
                 })
             });
         });
@@ -67,30 +70,32 @@ impl State {
         match direction {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
-
                 if let Some(path) = available_path {
-                    self.roads[0].add_car(Car::new(direction, path));
+                    self.roads[0].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::East => {
                 let available_path = self.roads[1].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[1].add_car(Car::new(direction, path));
+                    self.roads[1].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::South => {
                 let available_path = self.roads[2].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[2].add_car(Car::new(direction, path));
+                    self.roads[2].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::West => {
                 let available_path = self.roads[3].get_available_path();
-
                 if let Some(path) = available_path {
-                    self.roads[3].add_car(Car::new(direction, path));
+                    self.roads[3].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
         }
@@ -100,9 +105,7 @@ impl State {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
-                if car.path.current > 2 && car.path.current < 9 {
-                    cars.push(car.clone());
-                }
+                cars.push(car.clone());
             }
         }
 

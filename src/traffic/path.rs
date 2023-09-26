@@ -48,7 +48,7 @@ pub struct Path {
 impl Path {
     pub fn new(direction: &Direction, turning: &Turning) -> Path {
         Path {
-            current: 1,
+            current: 0,
             sectors: match turning {
                 Turning::Left => left_turn(direction),
                 Turning::Straight => go_straight(direction),
@@ -157,8 +157,8 @@ fn right_turn(direction: &Direction) -> Vec<Sector> {
         ]),
         Direction::East => get_path(vec![
             Sector::new(11, 3, Moving::Left), // Entry
-            Sector::new(8, 3, Moving::Down),  // Turning point
-            Sector::new(8, 0, Moving::Down),  // Exit
+            Sector::new(8, 3, Moving::Up),    // Turning point
+            Sector::new(8, 0, Moving::Up),    // Exit
         ]),
         Direction::South => get_path(vec![
             Sector::new(8, 11, Moving::Up),    // Entry
@@ -167,8 +167,8 @@ fn right_turn(direction: &Direction) -> Vec<Sector> {
         ]),
         Direction::West => get_path(vec![
             Sector::new(0, 8, Moving::Right), // Entry
-            Sector::new(3, 8, Moving::Up),    // Turning point
-            Sector::new(3, 11, Moving::Up),   // Exit
+            Sector::new(3, 8, Moving::Down),  // Turning point
+            Sector::new(3, 11, Moving::Down), // Exit
         ]),
     }
 }

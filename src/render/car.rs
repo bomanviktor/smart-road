@@ -13,7 +13,10 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         Moving::Right => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH * 0.8, SECTOR_WIDTH * 0.8);
+    let src_rect = Rect::new(x_offset, 0.0, sprite_width, SECTOR_WIDTH); // Use original sprite_width and SECTOR_WIDTH here
+
+    let scaled_width = SECTOR_WIDTH * 0.9;
+    let scaled_height = SECTOR_WIDTH * 0.9;
 
     draw_texture_ex(
         texture,
@@ -22,6 +25,7 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         WHITE,
         DrawTextureParams {
             source: Some(src_rect),
+            dest_size: Some(Vec2::new(scaled_width, scaled_height)), // Add this line for scaling
             ..Default::default()
         },
     );
