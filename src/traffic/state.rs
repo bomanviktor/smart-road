@@ -54,10 +54,11 @@ impl State {
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.vel);
+
                     car.move_car(&all_cars, &self.grid);
                     self.grid.update_grid(car.clone());
                     // self.grid.display_intersection();
-                    println!("{}", self.grid);
+                    // println!("{}", self.grid);
                 })
             });
         });
@@ -85,7 +86,6 @@ impl State {
             }
             Direction::South => {
                 let available_path = self.roads[2].get_available_path();
-
                 if let Some(path) = available_path {
                     self.roads[2].add_car(Car::new(direction, path, self.total_cars));
                     self.total_cars += 1;
@@ -105,7 +105,9 @@ impl State {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
-                cars.push(car.clone());
+                if car.index < 10 {
+                    cars.push(car.clone());
+                }
             }
         }
 

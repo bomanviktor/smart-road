@@ -1,5 +1,5 @@
-use crate::config::*;
 use crate::traffic::*;
+
 impl Car {
     /// ### scan_in_front
     /// Scans the sector in front of car.
@@ -8,107 +8,112 @@ impl Car {
     /// Scans the sector in front of car.
     /// Uses 5 px margin to avoid scanning unwanted cars.
     pub fn scan_in_front(&mut self, cars: &[Car]) -> bool {
-        let top = self.get_borders().top as usize;
-        let right = self.get_borders().right as usize;
-        let bottom = self.get_borders().bottom as usize;
-        let left = self.get_borders().left as usize;
+        let left = self.get_borders().left;
+        let right = self.get_borders().right;
+        let top = self.get_borders().top;
+        let bottom = self.get_borders().bottom;
 
-        for car in cars {
-            let other_top = car.get_borders().top as usize;
-            let other_right = car.get_borders().right as usize;
-            let other_bottom = car.get_borders().bottom as usize;
-            let other_left = car.get_borders().left as usize;
+        let mut shortest = 0.0;
+
+        for car in cars.iter().filter(|c| c.id != self.id) {
+            let (car_x, car_y) = car.center_car();
 
             match self.moving {
                 Moving::Up => {
-                    for x in left + 20..right - 20 {
-                        for y in (top - SCAN_AREA)..top {
-                            if (other_bottom..other_top).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
+                    if car_y > self.center_car().1 {
+                        continue;
                     }
-                }
-                Moving::Right => {
-                    for x in right..(right + SCAN_AREA) {
-                        for y in top + 20..bottom - 20 {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
+                    if (left..right).contains(&car_x) && self.calculate_distance(car) > shortest {
+                        shortest = self.calculate_distance(car);
                     }
                 }
                 Moving::Down => {
-                    for x in left + 20..right - 20 {
-                        for y in bottom..(bottom + SCAN_AREA) {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
+                    if car_y < self.center_car().1 {
+                        continue;
+                    }
+                    if (left..right).contains(&car_x) && self.calculate_distance(car) > shortest {
+                        shortest = self.calculate_distance(car);
+                    }
+                }
+                Moving::Right => {
+                    if car_x < self.center_car().0 {
+                        continue;
+                    }
+                    if (top..bottom).contains(&car_y) && self.calculate_distance(car) > shortest {
+                        shortest = self.calculate_distance(car);
                     }
                 }
                 Moving::Left => {
-                    for x in (left - SCAN_AREA)..left {
-                        for y in top - 20..bottom + 20 {
-                            if (other_top..other_bottom).contains(&y)
-                                && (other_left..other_right).contains(&x)
-                            {
-                                return true;
-                            }
-                        }
+                    if car_x > self.center_car().0 {
+                        continue;
+                    }
+                    if (top..bottom).contains(&car_y) && self.calculate_distance(car) > shortest {
+                        shortest = self.calculate_distance(car);
                     }
                 }
             }
+        }
+
+        if shortest != 0.0 {
+            self.brake(shortest);
         }
         false
     }
 
-    pub fn center_car(&self) -> usize {
-        let top = self.get_borders().top as usize;
-        let right = self.get_borders().right as usize;
-        let bottom = self.get_borders().bottom as usize;
-        let left = self.get_borders().left as usize;
+    /*fn opposite_direction(&self, other: &Car) -> bool {
         match self.moving {
-            Moving::Right | Moving::Left => bottom - top / 2,
-            Moving::Down | Moving::Up => right - left / 2,
+            Moving::Up => other.moving == Moving::Down,
+            Moving::Down => other.moving == Moving::Up,
+            Moving::Left => other.moving == Moving::Right,
+            Moving::Right => other.moving == Moving::Left,
         }
+    }
+
+     */
+
+    pub fn center_car(&self) -> (f32, f32) {
+        let top = self.get_borders().top;
+        let right = self.get_borders().right;
+        let bottom = self.get_borders().bottom;
+        let left = self.get_borders().left;
+        (right - left / 2.0, bottom - top / 2.0)
     }
 
     pub fn sector_ahead(&mut self, cars: &[Car]) {
         for car in cars {
-            if car.next_sector() == self.next_sector()
-                && car.sector_position() > self.sector_position()
-            {
-                self.slow_down();
-                self.brake()
+            if car.get_sector() == self.next_sector() {
+                if self.moving == car.moving {
+                    if self.vel > car.vel {
+                        self.vel = car.vel;
+                    } else {
+                        self.accelerate();
+                    }
+                } else {
+                    self.brake(self.calculate_distance(car));
+                }
             }
         }
+    }
+
+    pub fn break_deadlock(&mut self, cars: &[Car]) {
+        for car in cars.iter().filter(|c| c.vel == 0.0 && self.neighbors(c)) {
+            if self.index > car.index {
+                self.accelerate();
+                return;
+            }
+        }
+    }
+
+    fn neighbors(&self, other: &Car) -> bool {
+        let x = self.get_sector().get_x();
+        let y = self.get_sector().get_y();
+        (x - 1..=x + 1).contains(&other.get_sector().get_x())
+            && (y - 1..=y + 1).contains(&other.get_sector().get_y())
     }
 
     fn next_sector(&self) -> Sector {
-        self.path.sectors[self.path.current].clone()
+        self.path.sectors[self.index + 1].clone()
     }
-
-    /// ### scan_sector
-    /// Scans the current sector and checks if another car is inside the sector.
-    /* fn scan_sector(&self, cars: &[Car]) -> bool {
-            for car in cars.iter().filter(|&c| {
-                self.get_sector() == c.get_sector()
-
-            }) {
-                if self.sector_position() < car.sector_position() {
-                    return true;
-                }
-            }
-            false
-        }
-    */
 
     /// ### adjacent_sectors
     /// Check for cars in chosen amount of sectors ahead. Also check adjacent sectors.
@@ -121,8 +126,8 @@ impl Car {
     /// - Left:  x-n, y-n..n
     ///
     /// With n being `sectors_ahead`
-    pub fn adjacent_sectors(&mut self, grid: &Grid, sectors_ahead: usize) -> bool {
-        let i = self.path.current;
+    pub fn adjacent_sectors(&mut self, grid: &Grid, sectors_ahead: usize) -> Option<Car> {
+        let i = self.index;
         let sector_ahead = &self.path.sectors[i + sectors_ahead];
         let x = sector_ahead.get_x();
         let y = sector_ahead.get_y();
@@ -130,35 +135,54 @@ impl Car {
         match sector_ahead.moving {
             Moving::Up | Moving::Down => {
                 if let Some(car) = grid.get_car_at_coords(x - sectors_ahead, y) {
-                    if car.moving == Moving::Right {
-                        return self.sector_position() < car.sector_position();
+                    if car.moving == Moving::Left && self.sector_position() < car.sector_position()
+                    {
+                        return Some(car);
                     }
                 }
                 if grid.get_car_at_coords(x, y).is_some() {
-                    return true;
+                    return grid.get_car_at_coords(x, y);
                 }
                 if let Some(car) = grid.get_car_at_coords(x + sectors_ahead, y) {
-                    if car.moving == Moving::Left {
-                        return self.sector_position() < car.sector_position();
+                    if car.moving == Moving::Right && self.sector_position() < car.sector_position()
+                    {
+                        return Some(car);
                     }
                 }
             }
             Moving::Right | Moving::Left => {
                 if let Some(car) = grid.get_car_at_coords(x, y - sectors_ahead) {
-                    if car.moving == Moving::Down {
-                        return self.sector_position() < car.sector_position();
+                    if car.moving == Moving::Down && self.sector_position() < car.sector_position()
+                    {
+                        return Some(car);
                     }
                 }
                 if grid.get_car_at_coords(x, y).is_some() {
-                    return true;
+                    return grid.get_car_at_coords(x, y);
                 }
                 if let Some(car) = grid.get_car_at_coords(x, y + sectors_ahead) {
-                    if car.moving == Moving::Up {
-                        return self.sector_position() < car.sector_position();
+                    if car.moving == Moving::Up && self.sector_position() < car.sector_position() {
+                        return Some(car);
                     }
                 }
             }
         }
-        false
+        None
+    }
+
+    pub fn calculate_distance(&self, other: &Car) -> f32 {
+        let dx = if self.center_car().0 < other.center_car().0 {
+            other.center_car().0 - self.center_car().0
+        } else {
+            self.center_car().0 - other.center_car().0
+        };
+
+        let dy = if self.center_car().1 < other.center_car().1 {
+            other.center_car().1 - self.center_car().1
+        } else {
+            self.center_car().1 - other.center_car().1
+        };
+
+        (dx * dx + dy * dy).sqrt()
     }
 }

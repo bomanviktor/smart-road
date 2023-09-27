@@ -19,7 +19,7 @@ pub struct Sector {
 
 impl PartialEq for Sector {
     fn eq(&self, other: &Self) -> bool {
-        self.y == other.y && self.x == other.y && self.moving != other.moving
+        self.y == other.y && self.x == other.x && self.moving != other.moving
     }
 }
 
@@ -41,14 +41,12 @@ impl Sector {
 }
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Path {
-    pub current: usize,
     pub sectors: Vec<Sector>,
 }
 
 impl Path {
     pub fn new(direction: &Direction, turning: &Turning) -> Path {
         Path {
-            current: 0,
             sectors: match turning {
                 Turning::Left => left_turn(direction),
                 Turning::Straight => go_straight(direction),
