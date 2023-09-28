@@ -44,30 +44,23 @@ impl State {
 
     pub fn update(&mut self) {
         let all_cars = self.get_all_cars();
-
         self.roads.iter_mut().for_each(|road| {
             // Clean up finished cars and add their time to stats.
             road.cleanup_cars(&mut self.stats);
-
             // Get all cars from all paths from each road.
             road.cars.iter_mut().for_each(|cars| {
                 // Update x and y for each car, and update velocity statistics.
                 cars.iter_mut().for_each(|car| {
                     self.stats.set_velocity(car.vel);
-
-                    car.move_car(&all_cars, &self.grid);
+                    car.move_car(&all_cars);
                     self.grid.update_grid(car.clone());
-                    // self.grid.display_intersection();
-                    // println!("{}", self.grid);
                 })
             });
         });
-
         self.grid.refresh_grid();
     }
 
     pub fn add_car(&mut self, direction: Direction) {
-        // self.grid.display_intersection();
         match direction {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
@@ -105,7 +98,7 @@ impl State {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
-                if car.index < 10 {
+                if (1..11).contains(&car.index) {
                     cars.push(car.clone());
                 }
             }

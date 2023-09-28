@@ -19,7 +19,9 @@ pub mod config {
 
     pub const SPRITE_WIDTH: f32 = SECTOR_WIDTH / 4.0;
 
-    pub const SCAN_AREA: usize = (SECTOR_WIDTH / 10.0) as usize;
+    pub const SCAN_AREA: f32 = SECTOR_WIDTH * 3.0;
+
+    pub const COLLISION_DISTANCE: f32 = SECTOR_WIDTH * 1.1;
 
     pub const FPS: u64 = 60;
 

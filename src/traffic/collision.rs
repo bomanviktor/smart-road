@@ -1,188 +1,227 @@
+use crate::config::{SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::*;
 
 impl Car {
-    /// ### scan_in_front
-    /// Scans the sector in front of car.
-    /// Uses 5 px margin to avoid scanning unwanted cars.
-    /// ### scan_in_front
-    /// Scans the sector in front of car.
-    /// Uses 5 px margin to avoid scanning unwanted cars.
-    pub fn scan_in_front(&mut self, cars: &[Car]) -> bool {
-        let left = self.get_borders().left;
-        let right = self.get_borders().right;
-        let top = self.get_borders().top;
-        let bottom = self.get_borders().bottom;
+    /// ### forward_scan
+    /// Scans the sectors in front of the car
+    ///
+    pub fn forward_scan(&mut self, cars: &[Car]) {
+        // Get the ranges where we scan cars in front
+        let scan_x = self.get_borders().left..=self.get_borders().right;
+        let scan_y = self.get_borders().top..=self.get_borders().bottom;
 
-        let mut shortest = 0.0;
-
+        // The longest distance to car in front.
+        let mut distance = WINDOW_SIZE as f32;
         for car in cars.iter().filter(|c| c.id != self.id) {
-            let (car_x, car_y) = car.center_car();
+            if self.calculate_distance(car) > distance {
+                continue;
+            }
 
+            let (x, y) = self.center_car();
+            let (x2, y2) = car.center_car();
             match self.moving {
                 Moving::Up => {
-                    if car_y > self.center_car().1 {
+                    if y < y2 {
                         continue;
                     }
-                    if (left..right).contains(&car_x) && self.calculate_distance(car) > shortest {
-                        shortest = self.calculate_distance(car);
+                    if scan_x.contains(&x2) {
+                        distance = self.calculate_distance(car);
                     }
                 }
                 Moving::Down => {
-                    if car_y < self.center_car().1 {
+                    if y > y2 {
                         continue;
                     }
-                    if (left..right).contains(&car_x) && self.calculate_distance(car) > shortest {
-                        shortest = self.calculate_distance(car);
+                    if scan_x.contains(&x2) {
+                        distance = self.calculate_distance(car);
                     }
                 }
                 Moving::Right => {
-                    if car_x < self.center_car().0 {
+                    if x > x2 {
                         continue;
                     }
-                    if (top..bottom).contains(&car_y) && self.calculate_distance(car) > shortest {
-                        shortest = self.calculate_distance(car);
+                    if scan_y.contains(&y2) {
+                        distance = self.calculate_distance(car);
                     }
                 }
                 Moving::Left => {
-                    if car_x > self.center_car().0 {
+                    if x < x2 {
                         continue;
                     }
-                    if (top..bottom).contains(&car_y) && self.calculate_distance(car) > shortest {
-                        shortest = self.calculate_distance(car);
+                    if scan_y.contains(&y2) {
+                        distance = self.calculate_distance(car);
                     }
                 }
             }
         }
+        if distance > SECTOR_WIDTH {
+            self.accelerate(distance);
+        } else {
+            self.stop();
+        }
+    }
 
-        if shortest != 0.0 {
-            self.brake(shortest);
+    /// ### detect_collision
+    /// used to see if a car is on a collision course with you
+    pub fn detect_collision_course(&mut self, cars: &[Car]) {
+        let mut distance = SCAN_AREA;
+        for car in cars.iter().filter(|c| {
+            self.id != c.id
+                && self.vel < c.vel
+                && self.crossing_paths(c)
+                && self.calculate_distance(c) < SCAN_AREA
+        }) {
+            if self.calculate_distance(car) < distance {
+                distance = self.calculate_distance(car);
+            }
+        }
+
+        if distance < SCAN_AREA {
+            self.brake(distance);
+        }
+    }
+
+    fn crossing_paths(&self, other: &Car) -> bool {
+        for sector in &self.path.sectors[self.index..=self.index + 2] {
+            if sector.eq(&other.prev_sector()) || sector.eq(&other.get_sector()) {
+                return true;
+            }
         }
         false
     }
 
-    /*fn opposite_direction(&self, other: &Car) -> bool {
-        match self.moving {
-            Moving::Up => other.moving == Moving::Down,
-            Moving::Down => other.moving == Moving::Up,
-            Moving::Left => other.moving == Moving::Right,
-            Moving::Right => other.moving == Moving::Left,
-        }
-    }
-
-     */
-
-    pub fn center_car(&self) -> (f32, f32) {
-        let top = self.get_borders().top;
-        let right = self.get_borders().right;
-        let bottom = self.get_borders().bottom;
-        let left = self.get_borders().left;
-        (right - left / 2.0, bottom - top / 2.0)
-    }
-
-    pub fn sector_ahead(&mut self, cars: &[Car]) {
-        for car in cars {
-            if car.get_sector() == self.next_sector() {
-                if self.moving == car.moving {
-                    if self.vel > car.vel {
-                        self.vel = car.vel;
-                    } else {
-                        self.accelerate();
+    pub fn ray_casting(&mut self, cars: &[Car]) {
+        // Loop through all cars which are within collision range (one sector)
+        let mut distance = SCAN_AREA;
+        for car in cars.iter().filter(|c| {
+            self.id != c.id
+                && self.vel < c.vel
+                && self.calculate_distance(c) < SCAN_AREA
+                && self.moving != c.moving
+        }) {
+            // Only brake according to shortest distance
+            if self.calculate_distance(car) > distance {
+                continue;
+            }
+            let (x, y) = self.center_car();
+            let (x2, y2) = car.center_car();
+            match self.moving {
+                Moving::Up => {
+                    if y > y2 {
+                        distance = self.calculate_distance(car);
                     }
-                } else {
-                    self.brake(self.calculate_distance(car));
+                }
+                Moving::Down => {
+                    if y < y2 {
+                        distance = self.calculate_distance(car);
+                    }
+                }
+                Moving::Right => {
+                    if x < x2 {
+                        distance = self.calculate_distance(car);
+                    }
+                }
+                Moving::Left => {
+                    if x > x2 {
+                        distance = self.calculate_distance(car);
+                    }
                 }
             }
         }
-    }
 
-    pub fn break_deadlock(&mut self, cars: &[Car]) {
-        for car in cars.iter().filter(|c| c.vel == 0.0 && self.neighbors(c)) {
-            if self.index > car.index {
-                self.accelerate();
-                return;
-            }
+        if distance < SCAN_AREA {
+            self.brake(distance);
         }
     }
 
-    fn neighbors(&self, other: &Car) -> bool {
-        let x = self.get_sector().get_x();
-        let y = self.get_sector().get_y();
-        (x - 1..=x + 1).contains(&other.get_sector().get_x())
-            && (y - 1..=y + 1).contains(&other.get_sector().get_y())
+    /// ### leave_intersection
+    /// used when cars are leaving the intersection, to adjust to the car in front to avoid
+    /// weird looking "collisions".
+    pub fn leave_intersection(&mut self, cars: &[Car]) {
+        if let Some(car) = cars
+            .iter()
+            .find(|c| c.id < self.id && c.moving == self.moving)
+        {
+            if car.vel > self.vel {
+                self.accelerate(self.calculate_distance(car));
+            } else {
+                self.brake(self.calculate_distance(car));
+            }
+        } else {
+            self.accelerate(WINDOW_SIZE as f32);
+        }
     }
 
     fn next_sector(&self) -> Sector {
         self.path.sectors[self.index + 1].clone()
     }
 
-    /// ### adjacent_sectors
-    /// Check for cars in chosen amount of sectors ahead. Also check adjacent sectors.
-    /// This **takes into consideration** the direction the car will have in that sector.
-    ///
-    ///  **Calculation goes as follows:**
-    /// - Up:    x-n..n, y-n
-    /// - Right: x+n, y-n..n
-    /// - Down:  x-n..n, y+n
-    /// - Left:  x-n, y-n..n
-    ///
-    /// With n being `sectors_ahead`
-    pub fn adjacent_sectors(&mut self, grid: &Grid, sectors_ahead: usize) -> Option<Car> {
-        let i = self.index;
-        let sector_ahead = &self.path.sectors[i + sectors_ahead];
-        let x = sector_ahead.get_x();
-        let y = sector_ahead.get_y();
+    fn prev_sector(&self) -> Sector {
+        self.path.sectors[self.index - 1].clone()
+    }
 
-        match sector_ahead.moving {
-            Moving::Up | Moving::Down => {
-                if let Some(car) = grid.get_car_at_coords(x - sectors_ahead, y) {
-                    if car.moving == Moving::Left && self.sector_position() < car.sector_position()
-                    {
-                        return Some(car);
+    /// ### adjacent_sectors
+    /// Check for cars in the next. Also check adjacent sectors.
+    ///
+    /// **Calculation:**
+    ///
+    /// Up/Down: (x-1..=x+1).contains(x2) && y1 == y2
+    /// Left/Right: (y-1..=y+1).contains(y2) && x1 == x2
+    pub fn adjacent_sectors(&mut self, cars: &[Car]) {
+        let sector = self.next_sector();
+        let x = sector.get_x();
+        let y = sector.get_y();
+
+        let mut distance = SCAN_AREA;
+
+        for car in cars.iter().filter(|c| {
+            self.id != c.id
+                && self.vel < c.vel
+                && self.calculate_distance(c) < SCAN_AREA
+                && self.direction != c.direction
+        }) {
+            let sector2 = car.get_sector();
+            let x2 = sector2.get_x();
+            let y2 = sector2.get_y();
+
+            match self.moving {
+                Moving::Up | Moving::Down => {
+                    if (x - 1..=x + 1).contains(&x2) && y == y2 {
+                        distance = self.calculate_distance(car);
                     }
                 }
-                if grid.get_car_at_coords(x, y).is_some() {
-                    return grid.get_car_at_coords(x, y);
-                }
-                if let Some(car) = grid.get_car_at_coords(x + sectors_ahead, y) {
-                    if car.moving == Moving::Right && self.sector_position() < car.sector_position()
-                    {
-                        return Some(car);
-                    }
-                }
-            }
-            Moving::Right | Moving::Left => {
-                if let Some(car) = grid.get_car_at_coords(x, y - sectors_ahead) {
-                    if car.moving == Moving::Down && self.sector_position() < car.sector_position()
-                    {
-                        return Some(car);
-                    }
-                }
-                if grid.get_car_at_coords(x, y).is_some() {
-                    return grid.get_car_at_coords(x, y);
-                }
-                if let Some(car) = grid.get_car_at_coords(x, y + sectors_ahead) {
-                    if car.moving == Moving::Up && self.sector_position() < car.sector_position() {
-                        return Some(car);
+                Moving::Left | Moving::Right => {
+                    if (y - 1..=y + 1).contains(&y2) && x == x2 {
+                        distance = self.calculate_distance(car);
                     }
                 }
             }
         }
-        None
+        if distance < SCAN_AREA {
+            self.brake(distance);
+        }
     }
 
+    /// ### center_car
+    /// get the center point of a car
+    pub fn center_car(&self) -> (f32, f32) {
+        let top = self.get_borders().top;
+        let right = self.get_borders().right;
+        let bottom = self.get_borders().bottom;
+        let left = self.get_borders().left;
+        (left + ((right - left) / 2.0), top + ((bottom - top) / 2.0))
+    }
+
+    /// ### calculate_distance
+    /// used to calculate the distance between two cars
+    /// center points of both cars are used and then the distance formula:
+    ///
+    /// `sqrt(dx^2 + dy^2)`
     pub fn calculate_distance(&self, other: &Car) -> f32 {
-        let dx = if self.center_car().0 < other.center_car().0 {
-            other.center_car().0 - self.center_car().0
-        } else {
-            self.center_car().0 - other.center_car().0
-        };
-
-        let dy = if self.center_car().1 < other.center_car().1 {
-            other.center_car().1 - self.center_car().1
-        } else {
-            self.center_car().1 - other.center_car().1
-        };
-
+        let (x, y) = self.center_car();
+        let (x2, y2) = other.center_car();
+        let dx = if x < x2 { x2 - x } else { x - x2 };
+        let dy = if y < y2 { y2 - y } else { y - y2 };
         (dx * dx + dy * dy).sqrt()
     }
 }

@@ -1,9 +1,11 @@
 use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
-use crate::config::{MAX_VELOCITY, SECTOR_WIDTH, WINDOW_SIZE};
+use crate::config::{
+    COLLISION_DISTANCE, FULL_THROTTLE, MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE,
+};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Grid, Statistics};
+use crate::traffic::{Direction, Statistics};
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Turning {
@@ -71,7 +73,7 @@ impl Car {
 
     /// ### move_car
     /// Moves the car both in `Path` but also in `Car.x` and `Car.y`.
-    pub fn move_car(&mut self, all_cars: &[Car], grid: &Grid) {
+    pub fn move_car(&mut self, all_cars: &[Car]) {
         self.move_in_path();
         self.moving = self.get_sector().moving;
         match self.moving {
@@ -81,70 +83,84 @@ impl Car {
             Moving::Left => self.x -= self.vel * MAX_VELOCITY,
         }
 
+        // car is turning right, no further logic needed
         if self.turning == Turning::Right {
-            self.accelerate();
+            self.accelerate(SCAN_AREA);
             return;
         }
 
-        if self.turning == Turning::Straight && self.index >= 7 {
-            self.accelerate();
-            return;
-        }
-
-        if self.turning == Turning::Left && self.index >= 9 {
-            self.accelerate();
-            return;
-        }
-
+        // car is still entering the intersection
         if self.index < 2 {
             return;
         }
 
+        // car going straight has reached the other side of the intersection
+        if self.turning == Turning::Straight && self.index > 7 {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        // car going left has reached the other side of the intersection
+        if self.turning == Turning::Left && self.index > 8 {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        // Adjust position in x and y axis
         self.adjust_position();
 
-        // 1. Stop car if other car in same sector
-        // 2. Emergency brake if car is in one sector ahead or moving towards the sector
-        // 3. Brake gently if car is in two sectors ahead or car moving towards the sector
-        if let Some(car) = self.adjacent_sectors(grid, 1) {
-            self.brake(self.calculate_distance(&car));
-        } else if let Some(car) = self.adjacent_sectors(grid, 2) {
-            self.brake(self.calculate_distance(&car));
-        } else {
-            self.accelerate();
-        }
+        // send rays a certain distance and check for cars
+        self.ray_casting(all_cars);
 
-        self.sector_ahead(all_cars);
+        // look for cars in adjacent sectors
+        self.adjacent_sectors(all_cars);
 
-        if self.scan_in_front(all_cars) {
-            self.stop();
-        }
+        // detect cars that will be on collision course
+        self.detect_collision_course(all_cars);
 
-        if self.vel <= 0.3 {
-            self.break_deadlock(all_cars);
-        }
+        // scan in front of car to see if it is safe to accelerate, or if it should stop
+        self.forward_scan(all_cars);
     }
 
-    pub(crate) fn accelerate(&mut self) {
-        let new_vel = (2.0 - self.vel) / 20.0;
-        if self.vel < 2.0 {
+    pub fn accelerate(&mut self, distance: f32) {
+        // TODO: improve in `acceleration`
+        let x = if distance > SCAN_AREA {
+            1.0
+        } else {
+            distance / SCAN_AREA
+        };
+        let new_vel = ((FULL_THROTTLE - self.vel) / 20.0) * x;
+        if self.vel < FULL_THROTTLE {
             self.vel += new_vel;
         }
     }
 
-    pub fn slow_down(&mut self) {
-        self.vel *= 0.9;
-    }
-
     pub fn brake(&mut self, distance: f32) {
-        let new_vel = (distance / SECTOR_WIDTH) - 0.3;
+        // TODO: Improve this in `acceleration`
+        if distance < COLLISION_DISTANCE {
+            self.stop();
+        }
+        let new_vel = distance / SCAN_AREA;
         if new_vel > self.vel {
             return;
         }
         self.vel = new_vel;
     }
 
-    fn stop(&mut self) {
+    pub fn stop(&mut self) {
         self.vel = 0.0;
+        /*
+        let pos = self.sector_position();
+        // TODO: Improve this in `acceleration`
+        if pos < 10.0 {
+            match self.moving {
+                Moving::Up => self.y += pos,
+                Moving::Down => self.y -= pos,
+                Moving::Left => self.x += pos,
+                Moving::Right => self.x -= pos,
+            }
+        }
+         */
     }
 
     /// ### get_sector
@@ -166,7 +182,7 @@ impl Car {
 
     /// ### sector_position
     /// Get the distance travelled into a `Sector`. This is used to break deadlocks.
-    pub(crate) fn sector_position(&self) -> f32 {
+    pub fn sector_position(&self) -> f32 {
         match self.moving {
             Moving::Up => SECTOR_WIDTH - (self.y - self.get_sector().get_y() as f32 * SECTOR_WIDTH),
             Moving::Right => {

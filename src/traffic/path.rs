@@ -19,7 +19,7 @@ pub struct Sector {
 
 impl PartialEq for Sector {
     fn eq(&self, other: &Self) -> bool {
-        self.y == other.y && self.x == other.x && self.moving != other.moving
+        self.y == other.y && self.x == other.x
     }
 }
 
