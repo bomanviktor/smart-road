@@ -1,11 +1,14 @@
-use crate::config::SECTOR_WIDTH;
-use crate::traffic::{car::Car, Moving};
 use macroquad::prelude::*;
 
-pub fn render_car(car: &Car, texture: &Texture2D) {
-    // If you want one-fourth horizontally
-    let sprite_width = texture.width() / 4.0;
+use crate::config::SECTOR_WIDTH;
+use crate::traffic::{car::Car, Moving};
 
+pub fn render_car(car: &Car, texture: &Texture2D) {
+    // Assuming the new sprite sheet has four car images arranged horizontally
+    let sprite_width = texture.width() / 4.0;
+    let sprite_height = texture.height(); // Assuming all car sprites have the same height
+
+    // Determine which sprite to use based on the car's direction
     let x_offset = match car.moving {
         Moving::Up => 0.0,
         Moving::Left => sprite_width,
@@ -13,19 +16,23 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         Moving::Right => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, sprite_width, SECTOR_WIDTH); // Use original sprite_width and SECTOR_WIDTH here
+    let src_rect = Rect::new(x_offset, 0.0, sprite_width, sprite_height);
 
-    let scaled_width = SECTOR_WIDTH * 0.9;
-    let scaled_height = SECTOR_WIDTH * 0.9;
+    // Scale down by 80%
+    let scaled_size = SECTOR_WIDTH * 0.9;
+
+    // Calculate the position to center the car in the sector
+    let center_x = car.x + (SECTOR_WIDTH - scaled_size) / 2.0;
+    let center_y = car.y + (SECTOR_WIDTH - scaled_size) / 2.0;
 
     draw_texture_ex(
         texture,
-        car.x,
-        car.y,
+        center_x,
+        center_y,
         WHITE,
         DrawTextureParams {
             source: Some(src_rect),
-            dest_size: Some(Vec2::new(scaled_width, scaled_height)), // Add this line for scaling
+            dest_size: Some(Vec2::new(scaled_size, scaled_size)), // Set to 80% of the sector size
             ..Default::default()
         },
     );

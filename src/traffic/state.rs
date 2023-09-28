@@ -1,9 +1,9 @@
 use macroquad::rand::gen_range;
 
 use crate::traffic::car::Car;
-use crate::traffic::grid::Grid;
 use crate::traffic::road::Road;
 use crate::traffic::statistics::*;
+use crate::traffic::Turning;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Direction {
@@ -16,7 +16,6 @@ pub enum Direction {
 #[derive(PartialEq, Debug)]
 pub struct State {
     pub roads: [Road; 4],
-    pub grid: Grid,
     pub stats: Statistics,
     pub paused: bool,
     pub random: bool,
@@ -33,7 +32,6 @@ impl State {
                 Road::new(Direction::South),
                 Road::new(Direction::West),
             ],
-            grid: Grid::default(),
             stats: Statistics::default(),
             paused: false,
             random: false,
@@ -42,20 +40,8 @@ impl State {
         }
     }
 
-    pub fn prevent_deadlock(&self) -> bool {
-        let middle_sectors = vec![(5, 5), (5, 6), (6, 5), (6, 6)];
-        self
-            .get_all_cars()
-            .iter()
-            .filter(|c| {
-                middle_sectors.contains(&(c.get_sector().get_x(), c.get_sector().get_y()))
-            })
-            .count() >= 3
-    }
-
     pub fn update(&mut self) {
         let all_cars = self.get_all_cars();
-        let potential_deadlock = self.prevent_deadlock(); // Call to our new deadlock detection method
 
         self.roads.iter_mut().for_each(|road| {
             // Cleanup and statistics logic
@@ -64,24 +50,15 @@ impl State {
             // Iterating over each lane's cars
             road.cars.iter_mut().for_each(|cars| {
                 cars.iter_mut().for_each(|car| {
-                    // Check if the car should stop to prevent deadlock
-                    if car.should_stop(potential_deadlock) && car.index < 5 {
-                        car.stop(); // This will set car's velocity to 0
+                    if detect_deadlock(&all_cars, car) {
+                        car.stop();
                         return;
                     }
-
-                    // Existing car movement and statistics logic
                     self.stats.set_velocity(car.vel);
                     car.move_car(&all_cars);
-
-                    // Update the grid based on the car's new state
-                    self.grid.update_grid(car.clone());
                 });
             });
         });
-
-        // Refresh the grid after all updates
-        self.grid.refresh_grid();
     }
     pub fn add_car(&mut self, direction: Direction) {
         match direction {
@@ -117,7 +94,7 @@ impl State {
         }
     }
 
-    fn get_all_cars(&self) -> Vec<Car> {
+    pub fn get_all_cars(&self) -> Vec<Car> {
         let mut cars = Vec::new();
         for r in self.roads.iter() {
             for car in r.cars.clone().iter().take(2).flatten() {
@@ -138,6 +115,17 @@ impl State {
             _ => self.add_car(Direction::West),
         }
     }
+}
+
+fn detect_deadlock(other_cars: &[Car], car: &mut Car) -> bool {
+    let middle_sectors = [(5, 5), (5, 6), (6, 5), (6, 6)];
+    other_cars
+        .iter()
+        .filter(|c| middle_sectors.contains(&(c.sector(0).get_x(), c.sector(0).get_y())))
+        .count()
+        >= 3
+        && car.turning == Turning::Left
+        && car.index == 4
 }
 
 impl Default for State {

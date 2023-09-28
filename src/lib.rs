@@ -4,38 +4,14 @@ pub mod config {
 
     pub const WINDOW_SIZE: i32 = 1000;
     pub const ROAD_LINE_WIDTH: f32 = 5.0;
-
-    pub const ROAD_LINE_LENGTH: f32 = 50.0;
-
-    pub const TILE_SIZE: f32 = 10.0;
-
-    // Tile size for background and road
-    pub const BG_TILE_SIZE: f32 = WINDOW_SIZE as f32 / TILE_SIZE;
-    pub const ROAD_TILE_SIZE: f32 = ROAD_WIDTH / TILE_SIZE;
-
     pub const ROAD_LINE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
-    pub const ROAD_WIDTH: f32 = WINDOW_SIZE as f32 / 2.0;
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
-
-    pub const SPRITE_WIDTH: f32 = SECTOR_WIDTH / 4.0;
-
+    pub const ACCELERATION_DISTANCE: f32 = SECTOR_WIDTH * 2.0;
     pub const SCAN_AREA: f32 = SECTOR_WIDTH * 3.0;
-
-    pub const COLLISION_DISTANCE: f32 = SECTOR_WIDTH * 1.1;
-
     pub const FPS: u64 = 60;
-
     pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
-
-    pub const FULL_THROTTLE: f32 = 2.0;
-
-    pub const CRUISE: f32 = 1.0;
-
-    pub const BRAKE: f32 = 0.5;
-
-    pub const EMERGENCY_BRAKE: f32 = 0.2;
-    pub const STOP: f32 = 0.0;
-
+    pub const SPEED_LIMIT: f32 = 2.0;
+    pub const MARGIN: f32 = 4.0;
     pub const RANDOM_INTERVAL: u64 = 700;
     pub fn window_conf() -> Conf {
         Conf {
@@ -86,11 +62,6 @@ pub mod controls {
             state.display_grid = !state.display_grid;
         }
 
-        if is_key_pressed(KeyCode::S) {
-            println!("{:.?}", state);
-            println!("---------------------------------");
-        }
-
         if is_key_pressed(KeyCode::R) {
             state.random = !state.random;
         }
@@ -100,14 +71,12 @@ pub mod controls {
 pub mod traffic {
     pub use car::*;
     pub use collision::*;
-    pub use grid::*;
     pub use path::*;
     pub use path::*;
     pub use state::{Direction, State};
     pub use statistics::*;
 
     pub mod car;
-    pub mod grid;
     pub mod path;
     pub mod road;
     pub mod state;
