@@ -42,24 +42,47 @@ impl State {
         }
     }
 
-    pub fn update(&mut self) {
-        let all_cars = self.get_all_cars();
-        self.roads.iter_mut().for_each(|road| {
-            // Clean up finished cars and add their time to stats.
-            road.cleanup_cars(&mut self.stats);
-            // Get all cars from all paths from each road.
-            road.cars.iter_mut().for_each(|cars| {
-                // Update x and y for each car, and update velocity statistics.
-                cars.iter_mut().for_each(|car| {
-                    self.stats.set_velocity(car.vel);
-                    car.move_car(&all_cars);
-                    self.grid.update_grid(car.clone());
-                })
-            });
-        });
-        self.grid.refresh_grid();
+    pub fn prevent_deadlock(&self) -> bool {
+        let middle_sectors = vec![(5, 5), (5, 6), (6, 5), (6, 6)];
+        self
+            .get_all_cars()
+            .iter()
+            .filter(|c| {
+                middle_sectors.contains(&(c.get_sector().get_x(), c.get_sector().get_y()))
+            })
+            .count() >= 3
     }
 
+    pub fn update(&mut self) {
+        let all_cars = self.get_all_cars();
+        let potential_deadlock = self.prevent_deadlock(); // Call to our new deadlock detection method
+
+        self.roads.iter_mut().for_each(|road| {
+            // Cleanup and statistics logic
+            road.cleanup_cars(&mut self.stats);
+
+            // Iterating over each lane's cars
+            road.cars.iter_mut().for_each(|cars| {
+                cars.iter_mut().for_each(|car| {
+                    // Check if the car should stop to prevent deadlock
+                    if car.should_stop(potential_deadlock) && car.index < 5 {
+                        car.stop(); // This will set car's velocity to 0
+                        return;
+                    }
+
+                    // Existing car movement and statistics logic
+                    self.stats.set_velocity(car.vel);
+                    car.move_car(&all_cars);
+
+                    // Update the grid based on the car's new state
+                    self.grid.update_grid(car.clone());
+                });
+            });
+        });
+
+        // Refresh the grid after all updates
+        self.grid.refresh_grid();
+    }
     pub fn add_car(&mut self, direction: Direction) {
         match direction {
             Direction::North => {

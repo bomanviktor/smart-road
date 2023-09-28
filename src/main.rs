@@ -5,7 +5,7 @@ use std::time::{Duration, Instant};
 
 use macroquad::prelude::*;
 
-use smart_road::config::{window_conf, FPS};
+use smart_road::config::{window_conf, FPS, RANDOM_INTERVAL};
 use smart_road::controls::handle_input;
 use smart_road::render::car::render_car;
 use smart_road::render::grid::render_grid;
@@ -21,7 +21,7 @@ async fn main() {
     let mut last_frame_time = Instant::now();
 
     let mut random_timer = Instant::now();
-    let random_interval = Duration::from_millis(700);
+    let random_interval = Duration::from_millis(RANDOM_INTERVAL);
 
     loop {
         clear_background(BLACK);

@@ -147,6 +147,19 @@ impl Car {
         self.vel = new_vel;
     }
 
+    pub fn should_stop(&self, deadlock_detected: bool) -> bool {
+        if deadlock_detected && self.turning == Turning::Left {
+            if self.index >= 2 && self.index < 5 {
+                println!(
+                    "Car {} stopped at {} to prevent potential deadlock",
+                    self.id, self.index
+                );
+                return true;
+            }
+        }
+        false
+    }
+
     pub fn stop(&mut self) {
         self.vel = 0.0;
         /*

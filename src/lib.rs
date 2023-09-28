@@ -35,6 +35,8 @@ pub mod config {
 
     pub const EMERGENCY_BRAKE: f32 = 0.2;
     pub const STOP: f32 = 0.0;
+
+    pub const RANDOM_INTERVAL: u64 = 700;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
