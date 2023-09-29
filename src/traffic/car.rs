@@ -6,7 +6,7 @@ use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Statistics};
 
 use crate::config::{
-    ACCELERATION_DISTANCE, MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
+    ACCELERATION_DISTANCE, FPS, MAX_VELOCITY, SCAN_DISTANCE, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
 };
 
 #[derive(Eq, PartialEq, Clone, Debug)]
@@ -96,7 +96,7 @@ impl Car {
 
         // car is turning right, no further logic needed
         if self.turning == Turning::Right {
-            self.accelerate(SCAN_AREA);
+            self.accelerate();
             return;
         }
 
@@ -125,20 +125,15 @@ impl Car {
         self.forward_scan(all_cars);
     }
 
-    pub fn accelerate(&mut self, distance: f32) {
-        let x = if distance > ACCELERATION_DISTANCE {
-            1.0
-        } else {
-            distance / ACCELERATION_DISTANCE
-        };
-        let new_vel = ((SPEED_LIMIT - self.vel) / 60.0) * x;
+    pub fn accelerate(&mut self) {
+        let new_vel = (SPEED_LIMIT - self.vel) / FPS as f32;
         if self.vel < SPEED_LIMIT {
             self.vel += new_vel;
         }
     }
 
     pub fn brake(&mut self, distance: f32) {
-        let new_vel = self.vel - distance / SCAN_AREA;
+        let new_vel = self.vel - distance / SCAN_DISTANCE;
         if new_vel < 0.0 {
             return;
         }
@@ -153,6 +148,8 @@ impl Car {
         self.vel = 0.0;
     }
 
+    /// ### change_pos
+    /// Change position of car. Will go faster if no cars around and slower if too many cars around.
     fn change_pos(&mut self, cars: &[Car]) {
         let x = match cars
             .iter()

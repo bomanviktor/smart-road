@@ -9,12 +9,12 @@ pub mod config {
     pub const ROAD_LINE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
     pub const ACCELERATION_DISTANCE: f32 = SECTOR_WIDTH * 2.0;
-    pub const SCAN_AREA: f32 = SECTOR_WIDTH * 3.0;
+    pub const SCAN_DISTANCE: f32 = SECTOR_WIDTH * 3.0;
     pub const FPS: u64 = 60;
     pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
     pub const SPEED_LIMIT: f32 = 2.0;
 
-    pub const CRUISE_SPEED: f32 = 0.5;
+    pub const CRUISE_SPEED: f32 = 0.7;
     pub const MARGIN: f32 = 4.0;
     pub const RANDOM_INTERVAL: u64 = 600;
     pub fn window_conf() -> Conf {

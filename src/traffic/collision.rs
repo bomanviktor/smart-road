@@ -1,5 +1,5 @@
 use crate::config::{
-    ACCELERATION_DISTANCE, CRUISE_SPEED, MARGIN, SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE,
+    ACCELERATION_DISTANCE, CRUISE_SPEED, MARGIN, SCAN_DISTANCE, SECTOR_WIDTH, WINDOW_SIZE,
 };
 use crate::traffic::*;
 
@@ -45,29 +45,22 @@ impl Car {
             }
         }
         if distance > ACCELERATION_DISTANCE {
-            self.accelerate(distance);
+            self.accelerate();
         } else {
             self.brake(distance);
         }
     }
 
-    fn crossing_paths(&self, other: &Car) -> bool {
-        for sector in &self.path.sectors[self.index..=self.index + 2] {
-            if sector.eq(&other.sector(1))
-                || (sector.eq(&other.sector(0)) && other.sector_pos() < SECTOR_WIDTH / 2.0)
-            {
-                return true;
-            }
-        }
-        false
-    }
-
+    /// ### ray_casting
+    /// Check if there are any cars in front of self are inside the `SCAN_DISTANCE`.
+    /// If these cars have a shorter distance to the exit than self, brake according to the closest
+    /// of these cars.
     pub fn ray_casting(&mut self, cars: &[Car]) {
         // Loop through all cars which are within collision range (one sector)
-        let mut distance = SCAN_AREA;
+        let mut distance = SCAN_DISTANCE;
         for car in cars.iter().filter(|c| {
             self.longer_distance_to_exit(c)
-                && self.calc_dist(c) < SCAN_AREA
+                && self.calc_dist(c) < SCAN_DISTANCE
                 && self.crossing_paths(c)
         }) {
             // Only brake according to shortest distance
@@ -102,11 +95,26 @@ impl Car {
             }
         }
 
-        if distance < SCAN_AREA {
+        if distance < SCAN_DISTANCE {
             self.brake(distance);
         }
     }
 
+    /// ### crossing_paths
+    /// Check if a car has a crossing path with self
+    fn crossing_paths(&self, other: &Car) -> bool {
+        for sector in &self.path.sectors[self.index..=self.index + 2] {
+            if sector.eq(&other.sector(1))
+                || (sector.eq(&other.sector(0)) && other.sector_pos() < SECTOR_WIDTH / 2.0)
+            {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// ### longer_distance_to_exit
+    /// Check if `self` has a longer distance to the exit than `other`
     fn longer_distance_to_exit(&self, other: &Car) -> bool {
         self.path.sectors.len() as f32 * SECTOR_WIDTH
             - (self.index as f32 * SECTOR_WIDTH + self.sector_pos())
@@ -120,24 +128,6 @@ impl Car {
             .any(|c| self.id < c.id && (5..=7).contains(&c.index))
         {
             self.vel = CRUISE_SPEED;
-        }
-    }
-
-    /// ### leave_intersection
-    /// used when cars are leaving the intersection, to adjust to the car in front to avoid
-    /// weird looking "collisions".
-    pub fn leave_intersection(&mut self, cars: &[Car]) {
-        if let Some(car) = cars
-            .iter()
-            .find(|c| c.id < self.id && c.moving == self.moving)
-        {
-            if car.vel > self.vel {
-                self.accelerate(self.calc_dist(car));
-            } else {
-                self.brake(self.calc_dist(car));
-            }
-        } else {
-            self.accelerate(WINDOW_SIZE as f32);
         }
     }
 
