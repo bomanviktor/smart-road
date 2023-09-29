@@ -3,13 +3,6 @@ use std::fmt::{Display, Formatter};
 use crate::traffic::car::Turning;
 use crate::traffic::{Direction, Moving};
 
-/*
-pub enum SectorStatus {
-    Taken,
-    Free
-}
-*/
-
 #[derive(Eq, Clone, Debug)]
 pub struct Sector {
     x: usize,
@@ -55,46 +48,6 @@ impl Path {
         }
     }
 }
-
-/*
- *                  x
- *       0 1 2 3 4 5 6 7 8 9 10 11
- *    0       |_|_|_|_|_|_|        0
- *    1       |_|_|_|_|_|_|        1
- *    2       |_|_|_|_|_|_|        2
- *    3 |_|_|_|_|_|_|_|_|_|_|_|_|  3
- *    4 |_|_|_|_|_|_|_|_|_|_|_|_|  4
- *  y 5 |_|_|_|_|_|_|_|_|_|_|_|_|  5 y
- *    6 |_|_|_|_|_|_|_|_|_|_|_|_|  6
- *    7 |_|_|_|_|_|_|_|_|_|_|_|_|  7
- *    8 |_|_|_|_|_|_|_|_|_|_|_|_|  8
- *    9       |_|_|_|_|_|_|        9
- *    10      |_|_|_|_|_|_|        10
- *    11      |_|_|_|_|_|_|        11
- *       0 1 2 3 4 5 6 7 8 9 10 11
- *                  x
- *
- * PATHS FOR NORTH:
- * LEFT: (x5, y0) -> (x5, y6) -> (x11, y6)
- * STRAIGHT: (x4, y0) -> (x4, y11)
- * RIGHT: (x3, y0) -> (x3, y3) -> (x0, y3)
- *
- * PATHS FOR EAST:
- * LEFT: (x11, y5) -> (x5, y5) -> (x5, y11)
- * STRAIGHT: (x11, y4) -> (x0, y4)
- * RIGHT: (x11, y3) -> (x8, y3) -> (x8, y0)
- *
- * PATHS FOR SOUTH:
- * LEFT: (x6, y11) -> (x6, y5) -> (x0, y5)
- * STRAIGHT: (x7, y11) -> (x7, y0)
- * RIGHT: (x8, y11) -> (x8, y8) -> (x11, y8)
- *
- * PATHS FOR WEST:
- * LEFT: (x0, y6) -> (x6, y6) -> (x6, y0)
- * STRAIGHT: (x0, y7) -> (x11, y7)
- * RIGHT: (x0, y8) -> (x3, y8) -> (x3, y11)
- *
- */
 
 fn left_turn(direction: &Direction) -> Vec<Sector> {
     match direction {
