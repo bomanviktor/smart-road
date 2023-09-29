@@ -1,12 +1,22 @@
 use macroquad::prelude::*;
+use crate::traffic::Model;
+use crate::{
+    config::SECTOR_WIDTH,
+    traffic::{car::Car, Velocity},
+};
 
-use crate::config::SECTOR_WIDTH;
-use crate::traffic::{car::Car, Moving};
+pub fn render_car(car: &Car, textures: &[Texture2D]) {
+    let texture = match car.model {
+        Model::Standard => &textures[0],
+        Model::Audi => &textures[1],
+        Model::Truck => &textures[2],
+        Model::Van => &textures[3],
+        Model::Taxi => &textures[4],
+        Model::Viper => &textures[5],
+    };
 
-pub fn render_car(car: &Car, texture: &Texture2D) {
-    // Assuming the new sprite sheet has four car images arranged horizontally
-    let sprite_width = texture.width() / 4.0;
-    let sprite_height = texture.height(); // Assuming all car sprites have the same height
+    let full_width = texture.width();
+    let sprite_width = full_width / 4.0;
 
     // Determine which sprite to use based on the car's direction
     let x_offset = match car.moving {
@@ -16,7 +26,7 @@ pub fn render_car(car: &Car, texture: &Texture2D) {
         Moving::Right => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, sprite_width, sprite_height);
+    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
 
     // Scale down by 80%
     let scaled_size = SECTOR_WIDTH * 0.9;

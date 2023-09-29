@@ -1,6 +1,12 @@
 use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
 
+use rand::prelude::IteratorRandom;
+
+use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
+use crate::traffic::path::{Path, Sector};
+use crate::traffic::{Direction, Grid, Statistics};
+
 use crate::config::{
     ACCELERATION_DISTANCE, MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
 };
@@ -28,7 +34,27 @@ pub struct Borders {
     pub(crate) bottom: f32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum Model {
+    Standard,
+    Audi,
+    Truck,
+    Van,
+    Taxi,
+    Viper,
+}
+// Adjust odds of getting certain cars here. Might scratch and use `gen_range` instead
+const MODELS: [Model; 7] = [
+    Model::Standard,
+    Model::Standard,
+    Model::Audi,
+    Model::Truck,
+    Model::Van,
+    Model::Taxi,
+    Model::Viper,
+];
+
+#[derive(PartialEq, Clone, Debug)]
 pub struct Car {
     pub x: f32,
     pub y: f32,
@@ -40,6 +66,7 @@ pub struct Car {
     pub direction: Direction,
     pub id: usize,
     time: SystemTime,
+    pub model: Model,
 }
 
 impl PartialEq for Car {
@@ -68,6 +95,7 @@ impl Car {
             path,
             direction,
             time: SystemTime::now(),
+            model: MODELS.into_iter().choose(&mut rand::thread_rng()).unwrap(),
         }
     }
 
