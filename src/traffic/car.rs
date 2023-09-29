@@ -1,7 +1,6 @@
+use macroquad::rand::gen_range;
 use std::fmt::{Display, Formatter};
 use std::time::SystemTime;
-
-use rand::prelude::IteratorRandom;
 
 use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Statistics};
@@ -33,13 +32,11 @@ pub struct Borders {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Model {
+    Standard,
     Audi,
-    Truck,
-    Taxi,
     Viper,
 }
 // Adjust odds of getting certain cars here. Might scratch and use `gen_range` instead
-const MODELS: [Model; 4] = [Model::Audi, Model::Truck, Model::Taxi, Model::Viper];
 
 #[derive(Clone, Debug)]
 pub struct Car {
@@ -82,7 +79,11 @@ impl Car {
             path,
             direction,
             time: SystemTime::now(),
-            model: MODELS.into_iter().choose(&mut rand::thread_rng()).unwrap(),
+            model: match gen_range(0, 5) {
+                0 => Model::Viper,
+                1 => Model::Audi,
+                _ => Model::Standard,
+            },
         }
     }
 
