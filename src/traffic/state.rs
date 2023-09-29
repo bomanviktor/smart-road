@@ -19,9 +19,7 @@ pub struct State {
     pub roads: [Road; 4],
     pub stats: Statistics,
     pub show_final_statistics: bool,
-    pub paused: bool,
     pub random: bool,
-    pub display_grid: bool,
     pub total_cars: usize,
 }
 
@@ -35,9 +33,7 @@ impl State {
                 Road::new(Direction::West),
             ],
             stats: Statistics::default(),
-            paused: false,
             random: false,
-            display_grid: false,
             total_cars: 0,
             show_final_statistics: false,
         }

@@ -1,6 +1,6 @@
 #[derive(PartialEq, Debug)]
 pub struct Statistics {
-    max_vehicles: u32,
+    max_vehicles: usize,
     max_velocity: f32,
     min_velocity: f32,
     max_time: f32,
@@ -21,7 +21,7 @@ impl Statistics {
     }
 
     // Setters
-    pub fn set_max_vehicles(&mut self, max_vehicles: u32) {
+    pub fn set_max_vehicles(&mut self, max_vehicles: usize) {
         if max_vehicles > self.max_vehicles {
             self.max_vehicles = max_vehicles;
         }
@@ -68,7 +68,7 @@ impl Statistics {
     }
 
     // Getters
-    pub fn max_vehicles(&self) -> u32 {
+    pub fn max_vehicles(&self) -> usize {
         self.max_vehicles
     }
     pub fn max_velocity(&self) -> f32 {

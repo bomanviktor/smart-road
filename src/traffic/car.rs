@@ -106,7 +106,7 @@ impl Car {
         }
 
         // car going straight has reached the other side of the intersection
-        if self.index >= 7 {
+        if self.index >= 8 {
             self.forward_scan(all_cars);
             return;
         }

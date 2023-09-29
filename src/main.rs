@@ -6,7 +6,6 @@ use macroquad::prelude::*;
 use smart_road::config::{window_conf, FPS, RANDOM_INTERVAL};
 use smart_road::controls::handle_input;
 use smart_road::render::car::render_car;
-use smart_road::render::grid::render_grid;
 use smart_road::render::roads::render_textured_roads;
 use smart_road::render::statistics::render_statistics;
 use smart_road::traffic::*;
@@ -28,17 +27,11 @@ async fn main() {
         if !state.show_final_statistics {
             render_textured_roads(&textures);
 
-            if state.display_grid {
-                render_grid();
+            if state.random && random_timer.elapsed() > random_interval {
+                state.add_car_random();
+                random_timer = Instant::now();
             }
-
-            if !state.paused {
-                if state.random && random_timer.elapsed() > random_interval {
-                    state.add_car_random();
-                    random_timer = Instant::now();
-                }
-                state.update();
-            }
+            state.update();
 
             for road in &state.roads {
                 for car in road.cars.iter().flatten() {
@@ -52,8 +45,8 @@ async fn main() {
 
             last_frame_time = Instant::now();
         } else {
-            let max_vehicles = state.total_cars as u32;
-            render_statistics(&state.stats, max_vehicles);
+            state.stats.set_max_vehicles(state.total_cars);
+            render_statistics(&state.stats);
         }
         next_frame().await
     }

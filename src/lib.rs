@@ -3,6 +3,8 @@ pub mod config {
     use macroquad::window::Conf;
 
     pub const WINDOW_SIZE: i32 = 1000;
+    pub const FONT_SIZE: f32 = 20.0;
+    pub const TITLE_SIZE: f32 = FONT_SIZE * 1.5;
     pub const ROAD_LINE_WIDTH: f32 = 5.0;
     pub const ROAD_LINE_COLOR: Color = Color::new(0.8, 0.8, 0.8, 1.0);
     pub const SECTOR_WIDTH: f32 = WINDOW_SIZE as f32 / 12.0;
@@ -38,10 +40,6 @@ pub mod controls {
             std::process::exit(0);
         }
 
-        if is_key_pressed(KeyCode::P) {
-            state.paused = !state.paused;
-        }
-
         if is_key_pressed(KeyCode::Up) {
             state.add_car(Direction::South);
             state.random = false;
@@ -60,10 +58,6 @@ pub mod controls {
         if is_key_pressed(KeyCode::Left) {
             state.add_car(Direction::East);
             state.random = false;
-        }
-
-        if is_key_pressed(KeyCode::G) {
-            state.display_grid = !state.display_grid;
         }
 
         if is_key_pressed(KeyCode::R) {
@@ -96,10 +90,8 @@ pub mod render {
 
     pub mod roads;
 
-    pub mod grid;
-    pub mod textures;
-
     pub mod car;
+    pub mod textures;
 
     pub use car::render_car;
 
