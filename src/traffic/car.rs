@@ -126,7 +126,6 @@ impl Car {
     }
 
     pub fn accelerate(&mut self, distance: f32) {
-        // TODO: improve in `acceleration`
         let x = if distance > ACCELERATION_DISTANCE {
             1.0
         } else {
