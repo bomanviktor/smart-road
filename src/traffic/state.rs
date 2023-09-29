@@ -17,10 +17,11 @@ pub enum Direction {
 pub struct State {
     pub roads: [Road; 4],
     pub stats: Statistics,
+    pub show_final_statistics: bool,
     pub paused: bool,
     pub random: bool,
     pub display_grid: bool,
-    total_cars: usize,
+    pub total_cars: usize,
 }
 
 impl State {
@@ -36,7 +37,8 @@ impl State {
             paused: false,
             random: false,
             display_grid: false,
-            total_cars: 1,
+            total_cars: 0,
+            show_final_statistics: false,
         }
     }
 
@@ -65,30 +67,30 @@ impl State {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
                 if let Some(path) = available_path {
-                    self.roads[0].add_car(Car::new(direction, path, self.total_cars));
                     self.total_cars += 1;
+                    self.roads[0].add_car(Car::new(direction, path, self.total_cars));
                 }
             }
             Direction::East => {
                 let available_path = self.roads[1].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.roads[1].add_car(Car::new(direction, path, self.total_cars));
                     self.total_cars += 1;
+                    self.roads[1].add_car(Car::new(direction, path, self.total_cars));
                 }
             }
             Direction::South => {
                 let available_path = self.roads[2].get_available_path();
                 if let Some(path) = available_path {
-                    self.roads[2].add_car(Car::new(direction, path, self.total_cars));
                     self.total_cars += 1;
+                    self.roads[2].add_car(Car::new(direction, path, self.total_cars));
                 }
             }
             Direction::West => {
                 let available_path = self.roads[3].get_available_path();
                 if let Some(path) = available_path {
-                    self.roads[3].add_car(Car::new(direction, path, self.total_cars));
                     self.total_cars += 1;
+                    self.roads[3].add_car(Car::new(direction, path, self.total_cars));
                 }
             }
         }

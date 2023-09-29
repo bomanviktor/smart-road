@@ -10,6 +10,7 @@ use smart_road::controls::handle_input;
 use smart_road::render::car::render_car;
 use smart_road::render::grid::render_grid;
 use smart_road::render::roads::render_textured_roads;
+use smart_road::render::statistics::render_statistics;
 use smart_road::traffic::*;
 
 #[macroquad::main(window_conf)]
@@ -26,30 +27,36 @@ async fn main() {
     loop {
         clear_background(BLACK);
         handle_input(&mut state);
-        render_textured_roads(&textures);
-        if state.display_grid {
-            render_grid();
-        }
+        if !state.show_final_statistics {
+            render_textured_roads(&textures);
 
-        if !state.paused {
-            if state.random && random_timer.elapsed() > random_interval {
-                state.add_car_random();
-                random_timer = Instant::now();
+            if state.display_grid {
+                render_grid();
             }
-            state.update();
-        }
 
-        for road in &state.roads {
-            for car in road.cars.iter().flatten() {
-                render_car(car, &textures.cars);
+            if !state.paused {
+                if state.random && random_timer.elapsed() > random_interval {
+                    state.add_car_random();
+                    random_timer = Instant::now();
+                }
+                state.update();
             }
-        }
-        let elapsed = last_frame_time.elapsed();
-        if elapsed < frame_duration {
-            thread::sleep(frame_duration - elapsed);
-        }
 
-        last_frame_time = Instant::now();
+            for road in &state.roads {
+                for car in road.cars.iter().flatten() {
+                    render_car(car, &textures.cars);
+                }
+            }
+            let elapsed = last_frame_time.elapsed();
+            if elapsed < frame_duration {
+                thread::sleep(frame_duration - elapsed);
+            }
+
+            last_frame_time = Instant::now();
+        } else {
+            let max_vehicles = state.total_cars as u32;
+            render_statistics(&state.stats, max_vehicles);
+        }
         next_frame().await
     }
 }

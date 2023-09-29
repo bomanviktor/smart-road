@@ -30,7 +30,9 @@ pub mod controls {
     use crate::traffic::{Direction, State};
 
     pub fn handle_input(state: &mut State) {
-        if is_key_pressed(KeyCode::Escape) {
+        if is_key_pressed(KeyCode::Escape) && !state.show_final_statistics {
+            state.show_final_statistics = true;
+        } else if is_key_pressed(KeyCode::Escape) && state.show_final_statistics {
             std::process::exit(0);
         }
 
@@ -86,16 +88,20 @@ pub mod traffic {
 }
 
 pub mod render {
-    pub use car::render_car;
-    pub use grid::render_grid;
+
     pub use roads::render_textured_roads;
     pub use textures::Textures;
 
     pub mod roads;
 
+    pub mod grid;
     pub mod textures;
 
-    pub mod grid;
-
     pub mod car;
+
+    pub use car::render_car;
+
+    pub mod statistics;
+
+    pub use statistics::render_statistics;
 }
