@@ -3,15 +3,12 @@ use std::time::SystemTime;
 
 use rand::prelude::IteratorRandom;
 
-use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Grid, Statistics};
+use crate::traffic::{Direction, Statistics};
 
 use crate::config::{
     ACCELERATION_DISTANCE, MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
 };
-use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Statistics};
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Turning {
@@ -54,7 +51,7 @@ const MODELS: [Model; 7] = [
     Model::Viper,
 ];
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Car {
     pub x: f32,
     pub y: f32,

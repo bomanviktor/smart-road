@@ -20,11 +20,9 @@ impl Textures {
         let mut cars = Vec::new();
         for sprite in CAR_SPRITES {
             cars.push(load_texture(sprite).await.unwrap())
-      }
+        }
         Self {
             bg: load_texture("assets/intersection.png").await.unwrap(),
-                .await
-                .unwrap(),
             cars,
         }
     }

@@ -41,7 +41,7 @@ async fn main() {
 
         for road in &state.roads {
             for car in road.cars.iter().flatten() {
-                render_car(car, &textures.car);
+                render_car(car, &textures.cars);
             }
         }
         let elapsed = last_frame_time.elapsed();

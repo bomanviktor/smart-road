@@ -1,9 +1,9 @@
-use macroquad::prelude::*;
 use crate::traffic::Model;
 use crate::{
     config::SECTOR_WIDTH,
-    traffic::{car::Car, Velocity},
+    traffic::{car::Car, Moving},
 };
+use macroquad::prelude::*;
 
 pub fn render_car(car: &Car, textures: &[Texture2D]) {
     let texture = match car.model {
