@@ -1,4 +1,6 @@
-use crate::config::{ACCELERATION_DISTANCE, CRUISE_SPEED, MARGIN, SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE};
+use crate::config::{
+    ACCELERATION_DISTANCE, CRUISE_SPEED, MARGIN, SCAN_AREA, SECTOR_WIDTH, WINDOW_SIZE,
+};
 use crate::traffic::*;
 
 impl Car {
@@ -6,12 +8,6 @@ impl Car {
     /// Scans the sectors in front of the car and accelerate depending on the distance
     /// to the closest car in front
     pub fn forward_scan(&mut self, cars: &[Car]) {
-        let borders = self.borders();
-        let top = borders.top;
-        let bottom = borders.bottom;
-        let left = borders.left;
-        let right = borders.right;
-
         // Get the ranges where we scan cars in front
         let scan_x = self.borders().left + MARGIN..=self.borders().right - MARGIN;
         let scan_y = self.borders().top + MARGIN..=self.borders().bottom - MARGIN;
@@ -119,7 +115,10 @@ impl Car {
     }
 
     pub fn center_scan(&mut self, cars: &[Car]) {
-        if cars.iter().any(|c| self.id < c.id && (5..=7).contains(&c.index)) {
+        if cars
+            .iter()
+            .any(|c| self.id < c.id && (5..=7).contains(&c.index))
+        {
             self.vel = CRUISE_SPEED;
         }
     }
@@ -160,7 +159,7 @@ impl Car {
     pub fn calc_dist(&self, other: &Car) -> f32 {
         let (x, y) = self.center_car();
         let (x2, y2) = other.center_car();
-        let (dx, dy) = ((x - x2).abs(), (y-y2).abs());
+        let (dx, dy) = ((x - x2).abs(), (y - y2).abs());
         (dx * dx + dy * dy).sqrt()
     }
 }
