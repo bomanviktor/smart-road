@@ -65,14 +65,14 @@ pub fn render_statistics(stats: &Statistics, max_cars: u32) {
         Color::new(1.0, 1.0, 1.0, 1.0),
     );
     draw_text(
-        &format!("Close Calls: {}", "Pssshhh"),
+        &format!("Close Calls: {}", stats.close_calls()),
         WINDOW_SIZE as f32 / 2.0 - 100.0,
         WINDOW_SIZE as f32 / 2.0 + 40.0,
         20.0,
         Color::new(1.0, 1.0, 1.0, 1.0),
     );
     draw_text(
-        &format!("Collisions: {}", "Neva'!"),
+        &format!("Collisions: {}", "0"),
         WINDOW_SIZE as f32 / 2.0 - 100.0,
         WINDOW_SIZE as f32 / 2.0 + 60.0,
         20.0,
