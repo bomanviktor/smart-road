@@ -1,3 +1,4 @@
+use crate::config::{MARGIN, SECTOR_WIDTH};
 use macroquad::rand::gen_range;
 
 use crate::traffic::car::Car;
@@ -67,30 +68,30 @@ impl State {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
                 if let Some(path) = available_path {
-                    self.total_cars += 1;
                     self.roads[0].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::East => {
                 let available_path = self.roads[1].get_available_path();
 
                 if let Some(path) = available_path {
-                    self.total_cars += 1;
                     self.roads[1].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::South => {
                 let available_path = self.roads[2].get_available_path();
                 if let Some(path) = available_path {
-                    self.total_cars += 1;
                     self.roads[2].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
             Direction::West => {
                 let available_path = self.roads[3].get_available_path();
                 if let Some(path) = available_path {
-                    self.total_cars += 1;
                     self.roads[3].add_car(Car::new(direction, path, self.total_cars));
+                    self.total_cars += 1;
                 }
             }
         }
@@ -120,14 +121,62 @@ impl State {
 }
 
 fn detect_deadlock(other_cars: &[Car], car: &mut Car) -> bool {
+    if car.turning != Turning::Left {
+        return false;
+    }
+
     let middle_sectors = [(5, 5), (5, 6), (6, 5), (6, 6)];
-    other_cars
+    let cars: Vec<&Car> = other_cars
         .iter()
-        .filter(|c| middle_sectors.contains(&(c.sector(0).get_x(), c.sector(0).get_y())))
-        .count()
-        >= 3
-        && car.turning == Turning::Left
-        && car.index == 4
+        .filter(|&c| middle_sectors.contains(&(c.sector(0).get_x(), c.sector(0).get_y())))
+        .collect();
+
+    if car.index == 3 && car.sector_pos() > SECTOR_WIDTH - MARGIN {
+        return cars.len() >= 2;
+    }
+
+    if car.index == 4 && car.sector_pos() > SECTOR_WIDTH - MARGIN {
+        let north = cars
+            .iter()
+            .filter(|c| c.direction == Direction::North)
+            .count();
+        let east = cars
+            .iter()
+            .filter(|c| c.direction == Direction::East)
+            .count();
+        let south = cars
+            .iter()
+            .filter(|c| c.direction == Direction::South)
+            .count();
+        let west = cars
+            .iter()
+            .filter(|c| c.direction == Direction::West)
+            .count();
+        match car.direction {
+            Direction::West => {
+                if north >= 2 || east >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+            Direction::South => {
+                if north >= 2 || east >= 2 || west >= 2 {
+                    return false;
+                }
+            }
+            Direction::North => {
+                if west >= 2 || east >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+            Direction::East => {
+                if north >= 2 || west >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+        }
+        return cars.len() >= 3;
+    }
+    false
 }
 
 impl Default for State {

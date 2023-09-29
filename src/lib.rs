@@ -11,8 +11,10 @@ pub mod config {
     pub const FPS: u64 = 60;
     pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
     pub const SPEED_LIMIT: f32 = 2.0;
+
+    pub const CRUISE_SPEED: f32 = 0.5;
     pub const MARGIN: f32 = 4.0;
-    pub const RANDOM_INTERVAL: u64 = 700;
+    pub const RANDOM_INTERVAL: u64 = 600;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
