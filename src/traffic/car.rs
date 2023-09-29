@@ -33,23 +33,13 @@ pub struct Borders {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Model {
-    Standard,
     Audi,
     Truck,
-    Van,
     Taxi,
     Viper,
 }
 // Adjust odds of getting certain cars here. Might scratch and use `gen_range` instead
-const MODELS: [Model; 7] = [
-    Model::Standard,
-    Model::Standard,
-    Model::Audi,
-    Model::Truck,
-    Model::Van,
-    Model::Taxi,
-    Model::Viper,
-];
+const MODELS: [Model; 4] = [Model::Audi, Model::Truck, Model::Taxi, Model::Viper];
 
 #[derive(Clone, Debug)]
 pub struct Car {

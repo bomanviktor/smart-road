@@ -7,16 +7,13 @@ use macroquad::prelude::*;
 
 pub fn render_car(car: &Car, textures: &[Texture2D]) {
     let texture = match car.model {
-        Model::Standard => &textures[0],
+        Model::Viper => &textures[0],
         Model::Audi => &textures[1],
         Model::Truck => &textures[2],
-        Model::Van => &textures[3],
-        Model::Taxi => &textures[4],
-        Model::Viper => &textures[5],
+        Model::Taxi => &textures[3],
     };
 
-    let full_width = texture.width();
-    let sprite_width = full_width / 4.0;
+    let sprite_width = 218.0;
 
     // Determine which sprite to use based on the car's direction
     let x_offset = match car.moving {
@@ -26,14 +23,14 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
         Moving::Right => sprite_width * 3.0,
     };
 
-    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
+    let src_rect = Rect::new(x_offset, 0.0, sprite_width, sprite_width); // Use actual sprite dimensions
 
-    // Scale down by 80%
-    let scaled_size = SECTOR_WIDTH * 0.9;
+    // Calculate scaling factor to fit the sprite into the sector square
+    let scale_factor = SECTOR_WIDTH / sprite_width;
 
     // Calculate the position to center the car in the sector
-    let center_x = car.x + (SECTOR_WIDTH - scaled_size) / 2.0;
-    let center_y = car.y + (SECTOR_WIDTH - scaled_size) / 2.0;
+    let center_x = car.x + (SECTOR_WIDTH - (sprite_width * scale_factor)) / 2.0;
+    let center_y = car.y + (SECTOR_WIDTH - (sprite_width * scale_factor)) / 2.0;
 
     draw_texture_ex(
         &textures[0],
@@ -42,6 +39,11 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
         WHITE,
         DrawTextureParams {
             source: Some(src_rect),
+            dest_size: Some(Vec2::new(
+                sprite_width * scale_factor,
+                sprite_width * scale_factor,
+            )), // Scale to fit sector
+
             dest_size: Some(Vec2::new(scaled_size, scaled_size)), // Set to 90% of the sector size
             ..Default::default()
         },
