@@ -1,7 +1,9 @@
+use std::fmt::{Display, Formatter};
+
+use rand::prelude::IteratorRandom;
+
 use crate::traffic::car::Car;
 use crate::traffic::{Direction, Statistics, Turning};
-use rand::prelude::IteratorRandom;
-use std::fmt::{Display, Formatter};
 
 #[derive(PartialEq, Debug)]
 pub struct Road {
@@ -62,7 +64,7 @@ impl Road {
             available[0] = true;
         } else {
             let prev_car = self.cars[0].iter().next_back().unwrap();
-            if prev_car.path.current > 1 {
+            if prev_car.index > 2 {
                 available[0] = true;
             }
         }
@@ -71,7 +73,7 @@ impl Road {
             available[1] = true;
         } else {
             let prev_car = self.cars[1].iter().next_back().unwrap();
-            if prev_car.path.current > 1 {
+            if prev_car.index > 2 {
                 available[1] = true;
             }
         }
@@ -80,7 +82,7 @@ impl Road {
             available[2] = true;
         } else {
             let prev_car = self.cars[2].iter().next_back().unwrap();
-            if prev_car.path.current > 1 {
+            if prev_car.index > 2 {
                 available[2] = true;
             }
         }

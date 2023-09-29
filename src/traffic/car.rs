@@ -3,9 +3,12 @@ use std::time::SystemTime;
 
 use rand::prelude::IteratorRandom;
 
-use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
 use crate::traffic::path::{Path, Sector};
-use crate::traffic::{Direction, Grid, Statistics};
+use crate::traffic::{Direction, Statistics};
+
+use crate::config::{
+    ACCELERATION_DISTANCE, MAX_VELOCITY, SCAN_AREA, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
+};
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum Turning {
@@ -13,12 +16,19 @@ pub enum Turning {
     Straight,
     Right,
 }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Moving {
+    Up,
+    Right,
+    Down,
+    Left,
+}
 #[derive(Debug, Clone, PartialEq)]
-pub enum Velocity {
-    Up(f32),
-    Right(f32),
-    Down(f32),
-    Left(f32),
+pub struct Borders {
+    pub(crate) top: f32,
+    pub(crate) right: f32,
+    pub(crate) left: f32,
+    pub(crate) bottom: f32,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -41,204 +51,262 @@ const MODELS: [Model; 7] = [
     Model::Viper,
 ];
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(Clone, Debug)]
 pub struct Car {
     pub x: f32,
     pub y: f32,
-    pub vel: Velocity,
+    pub index: usize,
+    pub moving: Moving,
+    pub vel: f32,
     pub turning: Turning,
     pub path: Path,
-    pub has_turned: bool,
-    direction: Direction,
+    pub direction: Direction,
+    pub id: usize,
     time: SystemTime,
     pub model: Model,
 }
 
+impl PartialEq for Car {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl Car {
-    pub fn new(direction: Direction, turning: Turning) -> Car {
+    pub fn new(direction: Direction, turning: Turning, id: usize) -> Car {
         let path = Path::new(&direction, &turning);
         let (x, y) = get_entry_coords(&path.sectors[0]);
         Car {
             x,
             y,
-            vel: match &direction {
-                Direction::North => Velocity::Down(1.0),
-                Direction::East => Velocity::Left(1.0),
-                Direction::South => Velocity::Up(1.0),
-                Direction::West => Velocity::Right(1.0),
+            index: 0,
+            moving: match &direction {
+                Direction::North => Moving::Down,
+                Direction::East => Moving::Left,
+                Direction::South => Moving::Up,
+                Direction::West => Moving::Right,
             },
+            vel: 1.0,
+            id,
             turning,
             path,
-            has_turned: false,
             direction,
             time: SystemTime::now(),
             model: MODELS.into_iter().choose(&mut rand::thread_rng()).unwrap(),
         }
     }
 
-    // Add functionality here
-    pub fn move_car(&mut self) {
-        if !self.has_turned {
-            self.update_direction();
-        };
-        self.move_in_path();
-        match self.vel {
-            Velocity::Up(v) => self.y -= v,
-            Velocity::Right(v) => self.x += v,
-            Velocity::Down(v) => self.y += v,
-            Velocity::Left(v) => self.x -= v,
+    /// ### move_car
+    /// Moves the car both in `Path` but also in `Car.x` and `Car.y`.
+    pub fn move_car(&mut self, all_cars: &[Car]) {
+        self.move_in_path(all_cars);
+        self.moving = self.sector(0).moving;
+        match self.moving {
+            Moving::Up => self.y -= self.vel * MAX_VELOCITY,
+            Moving::Right => self.x += self.vel * MAX_VELOCITY,
+            Moving::Down => self.y += self.vel * MAX_VELOCITY,
+            Moving::Left => self.x -= self.vel * MAX_VELOCITY,
         }
-    }
 
-    pub fn get_velocity(&self) -> f32 {
-        match self.vel {
-            Velocity::Up(value) => value,
-            Velocity::Right(value) => value,
-            Velocity::Down(value) => value,
-            Velocity::Left(value) => value,
-        }
-    }
-
-    fn move_in_path(&mut self) {
-        let next_index = self.path.current + 1;
-        if next_index >= self.path.sectors.len() {
+        // car is turning right, no further logic needed
+        if self.turning == Turning::Right {
+            self.accelerate(SCAN_AREA);
             return;
         }
 
-        let next = &self.path.sectors[next_index];
+        // car is still entering the intersection
+        if self.index < 2 {
+            return;
+        }
 
-        match self.vel {
-            Velocity::Up(_) => {
+        // car going straight has reached the other side of the intersection
+        if self.turning == Turning::Straight && self.index > 7 {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        if self.turning == Turning::Straight && self.index == 7 && self.no_adjacent(all_cars) {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        // car going left has reached the other side of the intersection
+        if self.turning == Turning::Left && self.index > 8 {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        if self.turning == Turning::Left && self.index == 8 && self.no_adjacent(all_cars) {
+            self.leave_intersection(all_cars);
+            return;
+        }
+
+        // Adjust position in x and y axis
+        self.adjust_position();
+
+        // scan in front of car to see if it is safe to accelerate, or if it should stop
+        self.forward_scan(all_cars);
+
+        // send rays a certain distance and check for cars
+        self.ray_casting(all_cars);
+    }
+
+    pub fn accelerate(&mut self, distance: f32) {
+        // TODO: improve in `acceleration`
+        let x = if distance > ACCELERATION_DISTANCE {
+            1.0
+        } else {
+            distance / ACCELERATION_DISTANCE
+        };
+        let new_vel = ((SPEED_LIMIT - self.vel) / 50.0) * x;
+        if self.vel < SPEED_LIMIT {
+            self.vel += new_vel;
+        }
+    }
+
+    pub fn brake(&mut self, distance: f32) {
+        let new_vel = distance / SCAN_AREA;
+        if new_vel > self.vel {
+            return;
+        }
+        self.vel = new_vel;
+    }
+
+    pub fn stop(&mut self) {
+        self.vel = 0.0;
+    }
+
+    /// ### get_sector
+    /// Get the sector of a `Car` specified by `n`.
+    pub fn sector(&self, n: isize) -> Sector {
+        let i = if n < 0 {
+            self.index - (-n as usize)
+        } else {
+            self.index + n as usize
+        };
+
+        self.path.sectors[i].clone()
+    }
+
+    /// ### get_borders
+    /// Get the borders of a `Car`.
+    pub fn borders(&self) -> Borders {
+        Borders {
+            top: self.y,
+            right: self.x + SECTOR_WIDTH,
+            bottom: self.y + SECTOR_WIDTH,
+            left: self.x,
+        }
+    }
+
+    /// ### sector_position
+    /// Get the distance travelled into a `Sector`. This is used to break deadlocks.
+    pub fn sector_position(&self) -> f32 {
+        match self.moving {
+            Moving::Up => SECTOR_WIDTH - (self.y - self.sector(0).get_y() as f32 * SECTOR_WIDTH),
+            Moving::Right => SECTOR_WIDTH - (self.sector(0).get_x() as f32 * SECTOR_WIDTH - self.x),
+            Moving::Down => SECTOR_WIDTH - (self.sector(0).get_y() as f32 * SECTOR_WIDTH - self.y),
+            Moving::Left => SECTOR_WIDTH - (self.x - self.sector(0).get_x() as f32 * SECTOR_WIDTH),
+        }
+    }
+
+    /// ### move_in_path
+    /// Moves the car inside its own `Path` by incrementing `path.current`.
+    /// Stop if a car in sector ahead.
+    fn move_in_path(&mut self, cars: &[Car]) {
+        if self.index + 2 > self.path.sectors.len() {
+            return;
+        }
+        let car_ahead = cars.iter().any(|c| c.sector(0) == self.sector(1));
+
+        let next = &self.sector(0);
+        match self.moving {
+            Moving::Up => {
                 if self.update_up(next) {
-                    self.path.current += 1;
+                    if !car_ahead {
+                        self.index += 1;
+                    } else {
+                        self.stop();
+                    }
                 }
             }
-            Velocity::Right(_) => {
+            Moving::Right => {
                 if self.update_right(next) {
-                    self.path.current += 1;
+                    if !car_ahead {
+                        self.index += 1;
+                    } else {
+                        self.stop();
+                    }
                 }
             }
-            Velocity::Down(_) => {
+            Moving::Down => {
                 if self.update_down(next) {
-                    self.path.current += 1;
+                    if !car_ahead {
+                        self.index += 1;
+                    } else {
+                        self.stop();
+                    }
                 }
             }
-            Velocity::Left(_) => {
+            Moving::Left => {
                 if self.update_left(next) {
-                    self.path.current += 1;
+                    if !car_ahead {
+                        self.index += 1;
+                    } else {
+                        self.stop();
+                    }
                 }
             }
         }
     }
 
+    /// ### update_direction
+    /// Updates the direction of the car based on current sector in `Path`
+    pub fn adjust_position(&mut self) {
+        let previous = self.index - 1;
+        let previous_sector = &self.path.sectors[previous];
+
+        let sector = self.sector(0);
+
+        if sector.get_x() != previous_sector.get_x() {
+            self.y = SECTOR_WIDTH * sector.get_y() as f32;
+        }
+
+        if sector.get_y() != previous_sector.get_y() {
+            self.x = SECTOR_WIDTH * sector.get_x() as f32;
+        }
+    }
+
+    // Helper functions for `move_in_path` and `update_direction`
     fn update_up(&self, next: &Sector) -> bool {
-        self.y < next.get_y() as f32 * SECTOR_WIDTH
+        self.y - self.vel * MAX_VELOCITY <= next.get_y() as f32 * SECTOR_WIDTH
     }
 
     fn update_right(&self, next: &Sector) -> bool {
-        self.x > next.get_x() as f32 * SECTOR_WIDTH
+        self.x + self.vel * MAX_VELOCITY >= next.get_x() as f32 * SECTOR_WIDTH
     }
 
     fn update_down(&self, next: &Sector) -> bool {
-        self.y > next.get_y() as f32 * SECTOR_WIDTH
+        self.y + self.vel * MAX_VELOCITY >= next.get_y() as f32 * SECTOR_WIDTH
     }
 
     fn update_left(&self, next: &Sector) -> bool {
-        self.x < next.get_x() as f32 * SECTOR_WIDTH
+        self.x - self.vel * MAX_VELOCITY <= next.get_x() as f32 * SECTOR_WIDTH
     }
-
-    pub fn update_direction(&mut self) {
-        let next_index = self.path.current + 1;
-        if next_index > self.path.sectors.len() / 2 + 1 {
-            return;
-        }
-
-        let velocity = self.get_velocity();
-        let next = &self.path.sectors[next_index];
-
-        match self.direction {
-            Direction::North => {
-                if self.update_down(next) && self.update_left(next) {
-                    self.vel = Velocity::Right(velocity);
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_down(next) && self.update_right(next) {
-                    self.vel = Velocity::Left(velocity);
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::East => {
-                if self.update_left(next) && self.update_up(next) {
-                    self.vel = Velocity::Down(velocity);
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_left(next) && self.update_down(next) {
-                    self.vel = Velocity::Up(velocity);
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::South => {
-                if self.update_up(next) && self.update_left(next) {
-                    self.vel = Velocity::Right(velocity);
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_up(next) && self.update_right(next) {
-                    self.vel = Velocity::Left(velocity);
-                    self.y = next.get_y() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-            Direction::West => {
-                if self.update_right(next) && self.update_up(next) {
-                    self.vel = Velocity::Down(velocity);
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-                if self.update_right(next) && self.update_down(next) {
-                    self.vel = Velocity::Up(velocity);
-                    self.x = next.get_x() as f32 * SECTOR_WIDTH;
-                    self.has_turned = true;
-                }
-            }
-        }
-    }
-
-    pub fn update_in_grid(&self, grid: &mut Grid) {
-        let x = self.path.sectors[self.path.current].get_x();
-        let y = self.path.sectors[self.path.current].get_y();
-
-        if (3..=8).contains(&x) && (3..=8).contains(&y) {
-            grid.insert_car_to_intersection(self.clone());
-        }
-    }
-
-    /*
-        pub fn accelerate(&mut self, acceleration: f32) {
-            self.vel += acceleration
-        }
-
-        pub fn de_accelerate(&mut self, de_acceleration: f32) {
-            self.vel -= de_acceleration
-        }
-    */
 
     pub fn add_time(&self, stats: &mut Statistics) {
         let duration = SystemTime::now().duration_since(self.time).unwrap();
         stats.set_time(duration.as_secs_f32());
     }
 
-    // Check if the car has reached its destination
+    /// ### is_done
+    /// Checks if car has reached the end of their `Path`
     pub fn is_done(&self) -> bool {
-        match self.vel {
-            Velocity::Up(_) => self.y <= 0.0,
-            Velocity::Right(_) => self.x >= WINDOW_SIZE as f32 - SECTOR_WIDTH,
-            Velocity::Down(_) => self.y >= WINDOW_SIZE as f32 - SECTOR_WIDTH,
-            Velocity::Left(_) => self.x <= 0.0,
+        match self.moving {
+            Moving::Up => self.borders().top <= 0.0,
+            Moving::Right => self.borders().right >= WINDOW_SIZE as f32,
+            Moving::Down => self.borders().bottom >= WINDOW_SIZE as f32,
+            Moving::Left => self.borders().left <= 0.0,
         }
     }
 }
@@ -255,17 +323,21 @@ impl Display for Car {
         write!(
             f,
             "(x: {}, y: {})\n\
+                Id: {} \n\
                 Velocity: {:?}\n\
                 Turning: {:?}\n\
+                Moving: {:?}\n\
                 Sector index: {}\n\
-                Current sector: (x: {}, y: {})",
+                {}\n\
+                ------------------",
             self.x,
             self.y,
+            self.id,
             self.vel,
             self.turning,
-            self.path.current,
-            self.path.sectors[self.path.current].get_x(),
-            self.path.sectors[self.path.current].get_y()
+            self.moving,
+            self.index,
+            self.sector(0),
         )
     }
 }

@@ -11,7 +11,6 @@ const CAR_SPRITES: [&str; 6] = [
 
 #[derive(PartialEq, Clone)]
 pub struct Textures {
-    pub road: Texture2D,
     pub bg: Texture2D,
     pub cars: Vec<Texture2D>,
 }
@@ -23,10 +22,7 @@ impl Textures {
             cars.push(load_texture(sprite).await.unwrap())
         }
         Self {
-            road: load_texture("assets/asphalt/ground_asphalt_synth_08.png")
-                .await
-                .unwrap(),
-            bg: load_texture("assets/RockBG.png").await.unwrap(),
+            bg: load_texture("assets/intersection.png").await.unwrap(),
             cars,
         }
     }
