@@ -1,3 +1,4 @@
+use crate::config::{MARGIN, SECTOR_WIDTH};
 use macroquad::rand::gen_range;
 
 use crate::traffic::car::Car;
@@ -17,10 +18,11 @@ pub enum Direction {
 pub struct State {
     pub roads: [Road; 4],
     pub stats: Statistics,
+    pub show_final_statistics: bool,
     pub paused: bool,
     pub random: bool,
     pub display_grid: bool,
-    total_cars: usize,
+    pub total_cars: usize,
 }
 
 impl State {
@@ -36,7 +38,8 @@ impl State {
             paused: false,
             random: false,
             display_grid: false,
-            total_cars: 1,
+            total_cars: 0,
+            show_final_statistics: false,
         }
     }
 
@@ -118,14 +121,62 @@ impl State {
 }
 
 fn detect_deadlock(other_cars: &[Car], car: &mut Car) -> bool {
+    if car.turning != Turning::Left {
+        return false;
+    }
+
     let middle_sectors = [(5, 5), (5, 6), (6, 5), (6, 6)];
-    other_cars
+    let cars: Vec<&Car> = other_cars
         .iter()
-        .filter(|c| middle_sectors.contains(&(c.sector(0).get_x(), c.sector(0).get_y())))
-        .count()
-        >= 3
-        && car.turning == Turning::Left
-        && car.index == 4
+        .filter(|&c| middle_sectors.contains(&(c.sector(0).get_x(), c.sector(0).get_y())))
+        .collect();
+
+    if car.index == 3 && car.sector_pos() > SECTOR_WIDTH - MARGIN {
+        return cars.len() >= 2;
+    }
+
+    if car.index == 4 && car.sector_pos() > SECTOR_WIDTH - MARGIN {
+        let north = cars
+            .iter()
+            .filter(|c| c.direction == Direction::North)
+            .count();
+        let east = cars
+            .iter()
+            .filter(|c| c.direction == Direction::East)
+            .count();
+        let south = cars
+            .iter()
+            .filter(|c| c.direction == Direction::South)
+            .count();
+        let west = cars
+            .iter()
+            .filter(|c| c.direction == Direction::West)
+            .count();
+        match car.direction {
+            Direction::West => {
+                if north >= 2 || east >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+            Direction::South => {
+                if north >= 2 || east >= 2 || west >= 2 {
+                    return false;
+                }
+            }
+            Direction::North => {
+                if west >= 2 || east >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+            Direction::East => {
+                if north >= 2 || west >= 2 || south >= 2 {
+                    return false;
+                }
+            }
+        }
+        return cars.len() >= 3;
+    }
+    false
 }
 
 impl Default for State {

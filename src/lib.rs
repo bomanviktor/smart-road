@@ -11,8 +11,10 @@ pub mod config {
     pub const FPS: u64 = 60;
     pub const MAX_VELOCITY: f32 = (SECTOR_WIDTH * 2.0) / FPS as f32;
     pub const SPEED_LIMIT: f32 = 2.0;
+
+    pub const CRUISE_SPEED: f32 = 0.5;
     pub const MARGIN: f32 = 4.0;
-    pub const RANDOM_INTERVAL: u64 = 700;
+    pub const RANDOM_INTERVAL: u64 = 600;
     pub fn window_conf() -> Conf {
         Conf {
             window_title: "Smart-Road | Grit:lab".to_owned(),
@@ -30,7 +32,9 @@ pub mod controls {
     use crate::traffic::{Direction, State};
 
     pub fn handle_input(state: &mut State) {
-        if is_key_pressed(KeyCode::Escape) {
+        if is_key_pressed(KeyCode::Escape) && !state.show_final_statistics {
+            state.show_final_statistics = true;
+        } else if is_key_pressed(KeyCode::Escape) && state.show_final_statistics {
             std::process::exit(0);
         }
 
@@ -86,16 +90,20 @@ pub mod traffic {
 }
 
 pub mod render {
-    pub use car::render_car;
-    pub use grid::render_grid;
+
     pub use roads::render_textured_roads;
     pub use textures::Textures;
 
     pub mod roads;
 
+    pub mod grid;
     pub mod textures;
 
-    pub mod grid;
-
     pub mod car;
+
+    pub use car::render_car;
+
+    pub mod statistics;
+
+    pub use statistics::render_statistics;
 }

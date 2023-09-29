@@ -91,12 +91,7 @@ impl Car {
     pub fn move_car(&mut self, all_cars: &[Car]) {
         self.move_in_path(all_cars);
         self.moving = self.sector(0).moving;
-        match self.moving {
-            Moving::Up => self.y -= self.vel * MAX_VELOCITY,
-            Moving::Right => self.x += self.vel * MAX_VELOCITY,
-            Moving::Down => self.y += self.vel * MAX_VELOCITY,
-            Moving::Left => self.x -= self.vel * MAX_VELOCITY,
-        }
+        self.change_pos(all_cars);
 
         // car is turning right, no further logic needed
         if self.turning == Turning::Right {
@@ -110,35 +105,23 @@ impl Car {
         }
 
         // car going straight has reached the other side of the intersection
-        if self.turning == Turning::Straight && self.index > 7 {
-            self.leave_intersection(all_cars);
+        if self.index >= 7 {
+            self.forward_scan(all_cars);
             return;
         }
 
-        if self.turning == Turning::Straight && self.index == 7 && self.no_adjacent(all_cars) {
-            self.leave_intersection(all_cars);
-            return;
-        }
-
-        // car going left has reached the other side of the intersection
-        if self.turning == Turning::Left && self.index > 8 {
-            self.leave_intersection(all_cars);
-            return;
-        }
-
-        if self.turning == Turning::Left && self.index == 8 && self.no_adjacent(all_cars) {
-            self.leave_intersection(all_cars);
-            return;
+        if self.turning == Turning::Left && (5..=7).contains(&self.index) {
+            self.center_scan(all_cars);
         }
 
         // Adjust position in x and y axis
         self.adjust_position();
 
-        // scan in front of car to see if it is safe to accelerate, or if it should stop
-        self.forward_scan(all_cars);
-
         // send rays a certain distance and check for cars
         self.ray_casting(all_cars);
+
+        // scan in front of car to see if it is safe to accelerate, or if it should stop
+        self.forward_scan(all_cars);
     }
 
     pub fn accelerate(&mut self, distance: f32) {
@@ -148,50 +131,49 @@ impl Car {
         } else {
             distance / ACCELERATION_DISTANCE
         };
-        let new_vel = ((SPEED_LIMIT - self.vel) / 50.0) * x;
+        let new_vel = ((SPEED_LIMIT - self.vel) / 60.0) * x;
         if self.vel < SPEED_LIMIT {
             self.vel += new_vel;
         }
     }
 
     pub fn brake(&mut self, distance: f32) {
-        let new_vel = distance / SCAN_AREA;
-        if new_vel > self.vel {
+        let new_vel = self.vel - distance / SCAN_AREA;
+        if new_vel < 0.0 {
             return;
         }
-        self.vel = new_vel;
+
+        self.vel -= new_vel;
+        if self.vel < 0.3 {
+            self.stop();
+        }
     }
 
     pub fn stop(&mut self) {
         self.vel = 0.0;
     }
 
-    /// ### get_sector
-    /// Get the sector of a `Car` specified by `n`.
-    pub fn sector(&self, n: isize) -> Sector {
-        let i = if n < 0 {
-            self.index - (-n as usize)
-        } else {
-            self.index + n as usize
+    fn change_pos(&mut self, cars: &[Car]) {
+        let x = match cars
+            .iter()
+            .filter(|c| self.calc_dist(c) < ACCELERATION_DISTANCE)
+            .count()
+        {
+            0 => 1.1,
+            1 => 1.0,
+            _ => 0.9,
         };
-
-        self.path.sectors[i].clone()
-    }
-
-    /// ### get_borders
-    /// Get the borders of a `Car`.
-    pub fn borders(&self) -> Borders {
-        Borders {
-            top: self.y,
-            right: self.x + SECTOR_WIDTH,
-            bottom: self.y + SECTOR_WIDTH,
-            left: self.x,
+        match self.moving {
+            Moving::Up => self.y -= self.vel * MAX_VELOCITY * x,
+            Moving::Right => self.x += self.vel * MAX_VELOCITY * x,
+            Moving::Down => self.y += self.vel * MAX_VELOCITY * x,
+            Moving::Left => self.x -= self.vel * MAX_VELOCITY * x,
         }
     }
 
     /// ### sector_position
     /// Get the distance travelled into a `Sector`. This is used to break deadlocks.
-    pub fn sector_position(&self) -> f32 {
+    pub fn sector_pos(&self) -> f32 {
         match self.moving {
             Moving::Up => SECTOR_WIDTH - (self.y - self.sector(0).get_y() as f32 * SECTOR_WIDTH),
             Moving::Right => SECTOR_WIDTH - (self.sector(0).get_x() as f32 * SECTOR_WIDTH - self.x),
@@ -250,6 +232,23 @@ impl Car {
         }
     }
 
+    // Helper functions for `move_in_path`
+    fn update_up(&self, next: &Sector) -> bool {
+        self.y - self.vel * MAX_VELOCITY <= next.get_y() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_right(&self, next: &Sector) -> bool {
+        self.x + self.vel * MAX_VELOCITY >= next.get_x() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_down(&self, next: &Sector) -> bool {
+        self.y + self.vel * MAX_VELOCITY >= next.get_y() as f32 * SECTOR_WIDTH
+    }
+
+    fn update_left(&self, next: &Sector) -> bool {
+        self.x - self.vel * MAX_VELOCITY <= next.get_x() as f32 * SECTOR_WIDTH
+    }
+
     /// ### update_direction
     /// Updates the direction of the car based on current sector in `Path`
     pub fn adjust_position(&mut self) {
@@ -267,21 +266,27 @@ impl Car {
         }
     }
 
-    // Helper functions for `move_in_path` and `update_direction`
-    fn update_up(&self, next: &Sector) -> bool {
-        self.y - self.vel * MAX_VELOCITY <= next.get_y() as f32 * SECTOR_WIDTH
+    /// ### get_sector
+    /// Get the sector of a `Car` specified by `n`.
+    pub fn sector(&self, n: isize) -> Sector {
+        let i = if n < 0 {
+            self.index - (-n as usize)
+        } else {
+            self.index + n as usize
+        };
+
+        self.path.sectors[i].clone()
     }
 
-    fn update_right(&self, next: &Sector) -> bool {
-        self.x + self.vel * MAX_VELOCITY >= next.get_x() as f32 * SECTOR_WIDTH
-    }
-
-    fn update_down(&self, next: &Sector) -> bool {
-        self.y + self.vel * MAX_VELOCITY >= next.get_y() as f32 * SECTOR_WIDTH
-    }
-
-    fn update_left(&self, next: &Sector) -> bool {
-        self.x - self.vel * MAX_VELOCITY <= next.get_x() as f32 * SECTOR_WIDTH
+    /// ### get_borders
+    /// Get the borders of a `Car`.
+    pub fn borders(&self) -> Borders {
+        Borders {
+            top: self.y,
+            right: self.x + SECTOR_WIDTH,
+            bottom: self.y + SECTOR_WIDTH,
+            left: self.x,
+        }
     }
 
     pub fn add_time(&self, stats: &mut Statistics) {

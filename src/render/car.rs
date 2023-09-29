@@ -33,7 +33,7 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
     let center_y = car.y + (SECTOR_WIDTH - (sprite_width * scale_factor)) / 2.0;
 
     draw_texture_ex(
-        texture,
+        &textures[0],
         center_x,
         center_y,
         WHITE,
@@ -43,6 +43,8 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
                 sprite_width * scale_factor,
                 sprite_width * scale_factor,
             )), // Scale to fit sector
+
+            dest_size: Some(Vec2::new(scaled_size, scaled_size)), // Set to 90% of the sector size
             ..Default::default()
         },
     );
