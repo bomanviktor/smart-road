@@ -1,3 +1,5 @@
+use crate::config::FPS;
+
 #[derive(PartialEq, Debug)]
 pub struct Statistics {
     max_vehicles: usize,
@@ -6,6 +8,7 @@ pub struct Statistics {
     max_time: f32,
     min_time: f32,
     close_calls: u32,
+    collisions: u32,
 }
 
 impl Statistics {
@@ -17,6 +20,7 @@ impl Statistics {
             max_time: 0.0,
             min_time: 0.0,
             close_calls: 0,
+            collisions: 0,
         }
     }
 
@@ -67,6 +71,10 @@ impl Statistics {
         self.close_calls += 1;
     }
 
+    pub fn set_collisions(&mut self) {
+        self.collisions += 1;
+    }
+
     // Getters
     pub fn max_vehicles(&self) -> usize {
         self.max_vehicles
@@ -84,7 +92,11 @@ impl Statistics {
         self.min_time
     }
     pub fn close_calls(&self) -> u32 {
-        self.close_calls
+        (self.close_calls / 2) / FPS as u32
+    }
+
+    pub fn collisions(&self) -> u32 {
+        (self.collisions / 2) / FPS as u32
     }
 }
 

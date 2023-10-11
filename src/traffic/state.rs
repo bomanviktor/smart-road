@@ -1,4 +1,4 @@
-use crate::config::{MARGIN, SECTOR_WIDTH};
+use crate::config::{CLOSE_CALL_DISTANCE, COLLISION_DISTANCE, MARGIN, SECTOR_WIDTH};
 use macroquad::rand::gen_range;
 
 use crate::traffic::car::Car;
@@ -49,6 +49,12 @@ impl State {
             // Iterating over each lane's cars
             road.cars.iter_mut().for_each(|cars| {
                 cars.iter_mut().for_each(|car| {
+                    if detect_collision(car, &all_cars) {
+                        self.stats.set_collisions()
+                    } else if detect_close_call(car, &all_cars) {
+                        self.stats.set_close_calls();
+                    }
+
                     if detect_deadlock(&all_cars, car) {
                         car.stop();
                         return;
@@ -60,6 +66,9 @@ impl State {
         });
     }
     pub fn add_car(&mut self, direction: Direction) {
+        if self.get_all_cars().iter().filter(|c| c.vel == 0.0).count() >= 8 {
+            return;
+        }
         match direction {
             Direction::North => {
                 let available_path = self.roads[0].get_available_path();
@@ -114,6 +123,18 @@ impl State {
             _ => self.add_car(Direction::West),
         }
     }
+}
+
+fn detect_close_call(car: &Car, other_cars: &[Car]) -> bool {
+    other_cars
+        .iter()
+        .any(|c| c.id != car.id && car.calc_dist(c) <= CLOSE_CALL_DISTANCE)
+}
+
+fn detect_collision(car: &Car, other_cars: &[Car]) -> bool {
+    other_cars
+        .iter()
+        .any(|c| c.id != car.id && car.calc_dist(c) <= COLLISION_DISTANCE)
 }
 
 fn detect_deadlock(other_cars: &[Car], car: &mut Car) -> bool {

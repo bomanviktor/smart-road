@@ -1,7 +1,8 @@
 use crate::traffic::Statistics;
 use macroquad::prelude::*;
 
-use crate::config::{FONT_SIZE, SECTOR_WIDTH, TITLE_SIZE, WINDOW_SIZE};
+use crate::config::{SECTOR_WIDTH, WINDOW_SIZE};
+use crate::render::{FONT_SIZE, TITLE_SIZE};
 
 const TEXT_X_POS: f32 = CENTER_Y - 100.0;
 const CENTER_Y: f32 = WINDOW_SIZE as f32 / 2.0;
@@ -69,7 +70,7 @@ pub fn render_statistics(stats: &Statistics) {
         WHITE,
     );
     draw_text(
-        &format!("Collisions: {}", "0"),
+        &format!("Collisions: {}", stats.collisions()),
         TEXT_X_POS,
         CENTER_Y + 60.0,
         FONT_SIZE,
