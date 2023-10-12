@@ -301,10 +301,10 @@ impl Car {
     /// Checks if car has reached the end of their `Path`
     pub fn is_done(&self) -> bool {
         match self.moving {
-            Moving::Up => self.borders().top <= 0.0,
-            Moving::Right => self.borders().right >= WINDOW_SIZE as f32,
-            Moving::Down => self.borders().bottom >= WINDOW_SIZE as f32,
-            Moving::Left => self.borders().left <= 0.0,
+            Moving::Up => self.borders().bottom <= 0.0,
+            Moving::Right => self.borders().left >= WINDOW_SIZE as f32,
+            Moving::Down => self.borders().top >= WINDOW_SIZE as f32,
+            Moving::Left => self.borders().right <= 0.0,
         }
     }
 }

@@ -63,7 +63,7 @@ accelerate the car.
 
 Formula for acceleration:
 ```rust
-        let new_vel = (SPEED_LIMIT - self.vel) / 60.0;
+        let new_vel = (SPEED_LIMIT - self.vel) / FPS;
         if self.vel < SPEED_LIMIT {
             self.vel += new_vel;
         }
