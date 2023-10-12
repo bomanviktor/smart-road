@@ -1,5 +1,3 @@
-use std::fmt::{Display, Formatter};
-
 use crate::traffic::car::Turning;
 use crate::traffic::{Direction, Moving};
 
@@ -161,10 +159,4 @@ fn get_path(sectors: Vec<Sector>) -> Vec<Sector> {
         path.push(Sector::new(x, y, sectors[1].clone().moving));
     }
     path
-}
-
-impl Display for Sector {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Sector: (x: {}, y: {})", self.x, self.y)
-    }
 }

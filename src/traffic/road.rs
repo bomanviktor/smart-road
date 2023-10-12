@@ -1,11 +1,8 @@
-use std::fmt::{Display, Formatter};
-
 use rand::prelude::IteratorRandom;
 
 use crate::traffic::car::Car;
 use crate::traffic::{Direction, Statistics, Turning};
-
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 pub struct Road {
     direction: Direction,
     pub cars: [Vec<Car>; 3],
@@ -53,10 +50,7 @@ impl Road {
 
         paths.into_iter().choose(&mut rand::thread_rng())
     }
-    pub fn can_add_car(&self) -> bool {
-        let lanes = self.available_lanes();
-        lanes[0] || lanes[1] || lanes[2]
-    }
+
     fn available_lanes(&self) -> [bool; 3] {
         let mut available = [false, false, false];
 
@@ -101,15 +95,5 @@ impl Road {
         self.cars[0].retain(|car| !car.is_done());
         self.cars[1].retain(|car| !car.is_done());
         self.cars[2].retain(|car| !car.is_done());
-    }
-}
-
-impl Display for Road {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{:?}:\nLeft: {:?} \nStraight: {:?}\nRight: {:?}",
-            self.direction, self.cars[0], self.cars[1], self.cars[2]
-        )
     }
 }

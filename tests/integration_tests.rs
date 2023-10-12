@@ -2,7 +2,9 @@ mod common;
 
 mod test_config {}
 mod test_state {
+    use crate::common;
     use smart_road::traffic::state::*;
+
     #[test]
     fn test_constructor() {
         let state = State::default();
@@ -41,39 +43,24 @@ mod test_state {
         }
     }
 
-    #[test]
-    fn test_add_random() {
-        let mut state = State::default();
-        // Add cars
-        for _ in 0..20 {
-            state.add_car_random();
-        }
-        let mut cars = Vec::new();
+    #[tokio::test]
+    async fn test_simulation() {
+        let state = common::setup().await;
+        let total_cars = state
+            .roads
+            .iter()
+            .flat_map(|r| r.cars.clone())
+            .flatten()
+            .count();
 
-        for lane in state.roads {
-            cars.push(lane.cars);
-        }
+        assert_eq!(
+            total_cars, 0,
+            "Number of cars after simulation does not match expected value."
+        );
 
-        // Check if just the right amount of cars were added
-        assert_eq!(cars.iter().flatten().count(), 12);
-
-        // Check if len of path is longer than 0
-        // TODO: improve this test
-        for cars in cars.iter().flatten() {
-            for car in cars {
-                assert!(car.path.sectors.len() > 6);
-                assert!(car.path.sectors.len() < 14);
-            }
-        }
-    }
-
-    #[test]
-    fn test_update() {
-        let mut state = State::default();
-        state.update();
+        assert_eq!(state.stats.collisions(), 0);
     }
 }
-
 mod test_statistics {
     use macroquad::rand::gen_range;
     use smart_road::traffic::Statistics;
@@ -145,5 +132,16 @@ mod test_statistics {
 
         stats.set_max_velocity(n + 1.0);
         assert_eq!(stats.max_velocity(), n + 1.0);
+    }
+
+    #[test]
+    fn collisions() {
+        let mut stats = Statistics::new();
+
+        let n = gen_range(1, 100) as u32;
+        for _ in 0..=(n * 120) {
+            stats.set_collisions();
+        }
+        assert_eq!(stats.collisions(), n);
     }
 }
