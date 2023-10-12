@@ -10,16 +10,14 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
         Model::Audi => &textures[1],
         Model::Viper => &textures[2],
     };
-    let full_width = texture.width();
-    let sprite_width = full_width / 4.0;
     // Determine which sprite to use based on the car's direction
-    let x_offset = match car.moving {
+    let rotation: f32 = match car.moving {
         Moving::Up => 0.0,
-        Moving::Left => sprite_width,
-        Moving::Down => sprite_width * 2.0,
-        Moving::Right => sprite_width * 3.0,
+        Moving::Left => -90.0,
+        Moving::Down => -180.0,
+        Moving::Right => -270.0,
     };
-    let src_rect = Rect::new(x_offset, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
+    let src_rect = Rect::new(0.0, 0.0, SECTOR_WIDTH, SECTOR_WIDTH);
     // Scale down by 80%
     let scaled_size = SECTOR_WIDTH * 0.9;
     // Calculate the position to center the car in the sector
@@ -33,6 +31,7 @@ pub fn render_car(car: &Car, textures: &[Texture2D]) {
         WHITE,
         DrawTextureParams {
             source: Some(src_rect),
+            rotation: rotation.to_radians(),
             dest_size: Some(Vec2::new(scaled_size, scaled_size)), // Set to 80% of the sector size
             ..Default::default()
         },
