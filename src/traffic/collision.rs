@@ -45,7 +45,7 @@ impl Car {
             }
         }
         if distance > ACCELERATION_DISTANCE {
-            self.accelerate();
+            self.accelerate(distance);
         } else {
             self.brake(distance);
         }
@@ -100,6 +100,32 @@ impl Car {
         }
     }
 
+    pub fn check_passing(&mut self, cars: &[Car]) {
+        let index = if self.turning == Turning::Straight {
+            6..=8
+        } else {
+            5..=7
+        };
+        if cars.iter().any(|c| {
+            c.id != self.id
+                && c.turning == Turning::Straight
+                && self.direction != c.direction
+                && self.calc_dist(c) < SCAN_DISTANCE
+                && index.contains(&c.index)
+        }) {
+            self.stop();
+        }
+    }
+
+    pub fn sector_in_front(&mut self, cars: &[Car]) {
+        if let Some(car) = cars
+            .iter()
+            .find(|c| c.id != self.id && self.sector(1).eq(&c.sector(0)))
+        {
+            self.brake(self.calc_dist(car));
+        }
+    }
+
     /// ### crossing_paths
     /// Check if a car has a crossing path with self
     fn crossing_paths(&self, other: &Car) -> bool {
@@ -125,7 +151,7 @@ impl Car {
     pub fn center_scan(&mut self, cars: &[Car]) {
         if cars
             .iter()
-            .any(|c| self.id < c.id && (5..=7).contains(&c.index))
+            .any(|c| self.id < c.id && (5..=7).contains(&c.index) && c.turning == Turning::Left)
         {
             self.vel = CRUISE_SPEED;
         }

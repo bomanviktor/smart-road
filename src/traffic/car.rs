@@ -6,7 +6,8 @@ use crate::traffic::path::{Path, Sector};
 use crate::traffic::{Direction, Statistics};
 
 use crate::config::{
-    ACCELERATION_DISTANCE, FPS, MAX_VELOCITY, SCAN_DISTANCE, SECTOR_WIDTH, SPEED_LIMIT, WINDOW_SIZE,
+    ACCELERATION_DISTANCE, CLOSE_CALL_DISTANCE, FPS, MAX_VELOCITY, SCAN_DISTANCE, SECTOR_WIDTH,
+    SPEED_LIMIT, WINDOW_SIZE,
 };
 
 #[derive(Eq, PartialEq, Clone, Debug)]
@@ -88,7 +89,7 @@ impl Car {
     }
 
     /// ### move_car
-    /// Moves the car both in `Path` but also in `Car.x` and `Car.y`.
+    /// Move the car in `Path` and also in `Car.x` and `Car.y`.
     pub fn move_car(&mut self, all_cars: &[Car]) {
         self.move_in_path(all_cars);
         self.moving = self.sector(0).moving;
@@ -96,7 +97,7 @@ impl Car {
 
         // car is turning right, no further logic needed
         if self.turning == Turning::Right {
-            self.accelerate();
+            self.accelerate(SCAN_DISTANCE);
             return;
         }
 
@@ -105,14 +106,22 @@ impl Car {
             return;
         }
 
-        // car going straight has reached the other side of the intersection
-        if self.index >= 8 {
-            self.forward_scan(all_cars);
-            return;
+        if self.turning == Turning::Straight && (3..=7).contains(&self.index) {
+            self.sector_in_front(all_cars);
+        }
+
+        if self.index == 3 && self.sector_pos() > CLOSE_CALL_DISTANCE {
+            self.check_passing(all_cars);
         }
 
         if self.turning == Turning::Left && (5..=7).contains(&self.index) {
             self.center_scan(all_cars);
+        }
+
+        // car going straight has reached the other side of the intersection
+        if self.index >= 8 {
+            self.forward_scan(all_cars);
+            return;
         }
 
         // Adjust position in x and y axis
@@ -125,10 +134,18 @@ impl Car {
         self.forward_scan(all_cars);
     }
 
-    pub fn accelerate(&mut self) {
-        let new_vel = (SPEED_LIMIT - self.vel) / FPS as f32;
+    pub fn accelerate(&mut self, distance: f32) {
+        let x = if distance >= SCAN_DISTANCE {
+            1.0
+        } else {
+            distance / SCAN_DISTANCE
+        };
+        let new_vel = (SPEED_LIMIT - self.vel) / FPS as f32 * x;
         if self.vel < SPEED_LIMIT {
             self.vel += new_vel;
+        }
+        if self.vel > SPEED_LIMIT {
+            self.vel = SPEED_LIMIT;
         }
     }
 
@@ -137,7 +154,6 @@ impl Car {
         if new_vel < 0.0 {
             return;
         }
-
         self.vel -= new_vel;
         if self.vel < 0.3 {
             self.stop();
@@ -153,12 +169,12 @@ impl Car {
     fn change_pos(&mut self, cars: &[Car]) {
         let x = match cars
             .iter()
-            .filter(|c| self.calc_dist(c) < ACCELERATION_DISTANCE)
+            .filter(|c| self.id != c.id && self.calc_dist(c) < ACCELERATION_DISTANCE)
             .count()
         {
-            0 => 1.1,
-            1 => 1.0,
-            _ => 0.9,
+            0 => 1.05,
+            1 => 1.00,
+            _ => 0.90,
         };
         match self.moving {
             Moving::Up => self.y -= self.vel * MAX_VELOCITY * x,
